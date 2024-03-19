@@ -3,8 +3,25 @@ import React, { useState } from 'react';
 import { Button, Table,Tag } from 'antd';
 import ListModal from "../components/list.jsx";
 import CancelModal from "../components/Cancel.jsx";
+import styled from "styled-components";
+
+const Box = styled.div`
+.nft{
+    width: 50px;
+    height: 50px;
+    border-radius: 50px;
+    object-fit: cover;
+    object-position: center;
+}
+    
+`
 
 const columns = [
+    {
+        title: 'NFT',
+        dataIndex: 'nft',
+        render: (_, record) => <img className="nft" src={record.img} />
+    },
     {
         title: 'Name',
         dataIndex: 'name',
@@ -31,6 +48,7 @@ for (let i = 0; i < 46; i++) {
         age: 32,
         status:"Success",
         address: `London, Park Lane no. ${i}`,
+        img:"https://img2.baidu.com/it/u=2007734149,2491858995&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500",
     });
 }
 
@@ -72,7 +90,7 @@ export default function MyNFT(){
         {
             showCancel && <CancelModal handleClose={handleCloseCancel} show={showCancel} selectedRowKeys={selectedRowKeys} />
         }
-        <div>
+        <Box>
             <div
                 style={{
                     marginBottom: 16,
@@ -98,6 +116,6 @@ export default function MyNFT(){
         </span>
             </div>
             <Table rowSelection={rowSelection} columns={columns} dataSource={data} />
-        </div>
+        </Box>
     </Layout_ckb>
 }
