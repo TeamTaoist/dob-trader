@@ -69,7 +69,10 @@ async function buildTakerTxExample() {
     const orderOutPoints = [];
     for (let i = 0; i < cells.objects.length && i < 3; i++) {
         const element = cells.objects[i];
-        orderOutPoints.push(element.output_point);
+        orderOutPoints.push({
+            txHash: element.output_point.tx_hash,
+            index: element.output_point.index,
+        });
     }
 
     const { rawTx } = await buildTakerTx({
