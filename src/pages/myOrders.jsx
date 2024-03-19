@@ -1,6 +1,6 @@
 import Layout_ckb from "../components/layout.jsx";
 import React, { useState } from 'react';
-import { Button, Table } from 'antd';
+import {Button, Table, Tag} from 'antd';
 import styled from "styled-components";
 
 
@@ -17,6 +17,11 @@ const columns = [
         title: 'Address',
         dataIndex: 'address',
     },
+    {
+        title: 'Tags',
+        dataIndex: 'tags',
+        render: (_, record) => <Tag  color="magenta">{record.status}</Tag>
+    },
 ];
 const data = [];
 for (let i = 0; i < 46; i++) {
@@ -24,6 +29,7 @@ for (let i = 0; i < 46; i++) {
         key: i,
         name: `Edward King ${i}`,
         age: 32,
+        status:"Success",
         address: `London, Park Lane no. ${i}`,
     });
 }
