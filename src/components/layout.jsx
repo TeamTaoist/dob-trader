@@ -1,15 +1,34 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { Breadcrumb, Layout, Menu, theme } from 'antd';
+import styled from "styled-components";
 const { Header, Content, Footer } = Layout;
 const items = new Array(15).fill(null).map((_, index) => ({
     key: index + 1,
     label: `nav ${index + 1}`,
 }));
+
+const Box = styled.div`
+    display: flex;
+    min-height: 100vh;
+`
+const ContentBox = styled.div`
+    background: #fff;
+    min-height: 100%;
+    border-radius: 20px;
+    box-sizing: border-box;
+    padding: 20px;
+`
 const Layout_ckb = ({children}) => {
-    const {
-        token: { colorBgContainer, borderRadiusLG },
-    } = theme.useToken();
-    return (
+
+    const [ list,setList] = useState([
+        {
+            key: 0,
+            label: `Home`,
+            value:"home"
+
+        }
+    ])
+    return (<Box>
         <Layout>
             <Header
                 style={{
@@ -21,8 +40,8 @@ const Layout_ckb = ({children}) => {
                 <Menu
                     theme="dark"
                     mode="horizontal"
-                    defaultSelectedKeys={['2']}
-                    items={items}
+                    defaultSelectedKeys={['0']}
+                    items={list}
                     style={{
                         flex: 1,
                         minWidth: 0,
@@ -31,28 +50,13 @@ const Layout_ckb = ({children}) => {
             </Header>
             <Content
                 style={{
-                    padding: '0 48px',
+                    padding: '32px 48px',
                 }}
             >
-                <Breadcrumb
-                    style={{
-                        margin: '16px 0',
-                    }}
-                >
-                    <Breadcrumb.Item>Home</Breadcrumb.Item>
-                    <Breadcrumb.Item>List</Breadcrumb.Item>
-                    <Breadcrumb.Item>App</Breadcrumb.Item>
-                </Breadcrumb>
-                <div
-                    style={{
-                        background: colorBgContainer,
-                        minHeight: 280,
-                        padding: 24,
-                        borderRadius: borderRadiusLG,
-                    }}
-                >
+
+                <ContentBox>
                     {children}
-                </div>
+                </ContentBox>
             </Content>
             <Footer
                 style={{
@@ -62,6 +66,7 @@ const Layout_ckb = ({children}) => {
                 Ant Design ©{new Date().getFullYear()} Created by Ant UED
             </Footer>
         </Layout>
+        </Box>
     );
 };
 export default Layout_ckb;

@@ -1,6 +1,5 @@
 import { createGlobalStyle } from "styled-components";
-import "../assets/styles/font.css";
-import "../assets/styles/custom_variable.scss";
+
 
 const GlobalStyle = createGlobalStyle`
   body,html{
