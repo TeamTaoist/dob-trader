@@ -2,6 +2,7 @@ import { connect, initConfig, signRawTransaction } from "@joyid/ckb";
 import { Aggregator, buildTakerTx, CKBAsset, Collector } from "@nervina-labs/ckb-dex";
 import { serializeOutPoint } from "@nervosnetwork/ckb-sdk-utils";
 import Layout_ckb from "../components/layout.jsx";
+import { getDexLockScript, getSporeTypeScript } from "@nervina-labs/ckb-dex";
 
 export default function Test() {
 
@@ -39,16 +40,37 @@ async function buildTakerTxExample() {
         aggregator
     };
 
-    const orderOutPoints = [
+    const dexLock = getDexLockScript(false);
+    const sporeType = getSporeTypeScript(false);
+    const cells = await baseRPC('get_cells', [
         {
-            txHash: '0x24dcaabc5da6e4dc4e4257b425d718507e1f891fb9e26df41e12dbe3d41afe50',
-            index: '0x0',
-        },
-        {
-            txHash: '0x484c581b5697839ac5adc0bf94894f60482f99f86286d9e8b080561435cf1440',
-            index: '0x0',
-        },
-    ];
+            script: {
+                code_hash: dexLock.codeHash,
+                hash_type: dexLock.hashType,
+                args: "0x",
+            },
+            script_type: 'lock',
+            script_search_mode: 'prefix',
+            filter: {
+                script: {
+                    code_hash: sporeType.codeHash,
+                    hash_type: sporeType.hashType,
+                    args: "0x",
+                },
+                script_search_mode: 'prefix',
+                script_type: 'type',
+            },
+        }, 'asc', '0x3E8'
+    ]);
+
+    // cells order
+    console.log(cells);
+
+    const orderOutPoints = [];
+    for (let i = 0; i < cells.objects.length && i < 3; i++) {
+        const element = cells.objects[i];
+        orderOutPoints.push(element.output_point);
+    }
 
     const { rawTx } = await buildTakerTx({
         collector,
@@ -61,4 +83,32 @@ async function buildTakerTxExample() {
     const signedTx = await signRawTransaction(rawTx, buyer);
 
     return collector.getCkb().rpc.sendTransaction(signedTx, 'passthrough');
+}
+
+async function baseRPC(
+    method,
+    req,
+    url = "https://testnet.ckb.dev/rpc"
+) {
+    const payload = {
+        id: 1,
+        jsonrpc: '2.0',
+        method,
+        params: req ?? null,
+    }
+    const body = JSON.stringify(payload, null, '')
+
+    const data = await fetch(url, {
+        method: 'post',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body,
+    }).then((res) => res.json())
+
+    if (data.error) {
+        throw new Error(`RPC error: ${JSON.stringify(data.error)}`)
+    }
+
+    return data.result
 }
