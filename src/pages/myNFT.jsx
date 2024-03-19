@@ -4,51 +4,39 @@ import { Button, Table,Tag } from 'antd';
 import ListModal from "../components/list.jsx";
 import CancelModal from "../components/Cancel.jsx";
 import styled from "styled-components";
+import {shortAddress} from "../utils/global.js";
+import {formatUnit} from "@ckb-lumos/bi";
+import CkbImg from "../assets/ckb.png";
 
 const Box = styled.div`
 .nft{
-    width: 50px;
-    height: 50px;
-    border-radius: 50px;
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
     object-fit: cover;
     object-position: center;
 }
     
 `
+const PriceBox = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    img{
+        width: 24px;
+        height: 24px;
+    }
+`
 
-const columns = [
-    {
-        title: 'NFT',
-        dataIndex: 'nft',
-        render: (_, record) => <img className="nft" src={record.img} />
-    },
-    {
-        title: 'Name',
-        dataIndex: 'name',
-    },
-    {
-        title: 'Age',
-        dataIndex: 'age',
-    },
-    {
-        title: 'Address',
-        dataIndex: 'address',
-    },
-    {
-        title: 'Tags',
-        dataIndex: 'tags',
-        render: (_, record) => <Tag  color="magenta">{record.status}</Tag>
-    },
-];
 const data = [];
 for (let i = 0; i < 46; i++) {
     data.push({
         key: i,
         name: `Edward King ${i}`,
-        age: 32,
-        status:"Success",
-        address: `London, Park Lane no. ${i}`,
-        img:"https://img2.baidu.com/it/u=2007734149,2491858995&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500",
+        out_point: "0xa303647db127a198eb0fd42f86717e0e80f500bdcebdac8fb65cf5b0b06123e5",
+        Occupied:"34000000000",
+        price: "5497700000000",
+        img:"https://arseed.web3infra.dev/0kNCtP7aiArSYolnBOedfpUEI9HUKrs21BD7rIRGsVw",
     });
 }
 
@@ -57,6 +45,32 @@ export default function MyNFT(){
     const [loading, setLoading] = useState(false);
     const [showList, setShowList] = useState(false);
     const [showCancel, setShowCancel] = useState(false);
+    const columns = [
+        {
+            title: 'NFT',
+            dataIndex: 'nft',
+            render: (_, record) => <img className="nft" src={record.img} />
+        },
+        {
+            title: 'Name',
+            dataIndex: 'name',
+        },
+        {
+            title: 'Tx',
+            dataIndex: 'tx',
+            render: (_, record) => <span>{shortAddress(record.out_point)}</span>
+        },
+        {
+            title: 'Occupied',
+            dataIndex: 'occupied',
+            render: (_, record) => <Tag>&lt;{formatUnit(record.Occupied,'ckb') } CKBytes&gt;</Tag>
+        },
+        {
+            title: 'Price',
+            dataIndex: 'price',
+            render: (_, record) => <PriceBox> <img src={CkbImg} alt=""/>{formatUnit(record.price,"ckb")} <span>CKB</span></PriceBox>
+        },
+    ];
 
     const start = () => {
         setLoading(true);
