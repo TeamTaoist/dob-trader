@@ -13,6 +13,7 @@
     "@ant-design/icons": "^5.3.4",
     "@joyid/ckb": "^0.0.6",
     "@nervina-labs/ckb-dex": "^0.2.7",
+    "@nervosnetwork/ckb-sdk-utils": "^0.109.1",
     "@reduxjs/toolkit": "^2.2.1",
     "antd": "^5.15.3",
     "react": "^18.2.0",
