@@ -4,6 +4,7 @@ import styled from "styled-components";
 import {useLocation, useNavigate} from "react-router-dom";
 const { Header, Content, Footer } = Layout;
 import Connect from "./connect.jsx";
+import {items} from "../constant/menu.jsx";
 
 const Box = styled.div`
     display: flex;
@@ -16,30 +17,16 @@ const ContentBox = styled.div`
     box-sizing: border-box;
     padding: 20px;
 `
-const items =[
-    {
-        key: "home",
-        label: `Home`
 
-    },
-    {
-        key: "test",
-        label: `Test`
-
-    }
-]
 const Layout_ckb = ({children}) => {
     const [current, setCurrent] = useState('home');
     const navigate = useNavigate();
     const location = useLocation();
     useEffect(() => {
-        console.log(location.pathname)
         const cur = location.pathname.split("/")[1]
         setCurrent(cur)
-
     }, []);
     const onClick = (e) => {
-        console.log('click ', e);
         setCurrent(e.key);
         navigate(`/${e.key}`)
     };
