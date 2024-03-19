@@ -2,6 +2,7 @@ import Layout_ckb from "../components/layout.jsx";
 import React, { useState } from 'react';
 import { Button, Table,Tag } from 'antd';
 import ListModal from "../components/list.jsx";
+import CancelModal from "../components/Cancel.jsx";
 
 const columns = [
     {
@@ -37,6 +38,8 @@ export default function MyNFT(){
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showList, setShowList] = useState(false);
+    const [showCancel, setShowCancel] = useState(false);
+
     const start = () => {
         setLoading(true);
         // ajax request after empty completing
@@ -58,10 +61,16 @@ export default function MyNFT(){
     const handleClose = () =>{
         setShowList(false);
     }
+    const handleCloseCancel = () =>{
+        setShowCancel(false);
+    }
     return <Layout_ckb>
 
         {
             showList && <ListModal handleClose={handleClose} show={showList} selectedRowKeys={selectedRowKeys} />
+        }
+        {
+            showCancel && <CancelModal handleClose={handleCloseCancel} show={showCancel} selectedRowKeys={selectedRowKeys} />
         }
         <div>
             <div
@@ -77,7 +86,7 @@ export default function MyNFT(){
                 <Button type="primary"  onClick={() => setShowList(true)}>
                     List
                 </Button>
-                <Button type="primary"  onClick={() => setShowList(true)}>
+                <Button type="primary"  onClick={() => setShowCancel(true)}>
                     Cancel
                 </Button>
                 <span
