@@ -30,7 +30,7 @@ async function buildTakerTxExample() {
 
     const connectData = await connect();
 
-    const buyerAddr = connectData.address;
+    const buyer = connectData.address;
 
     const aggregator = new Aggregator('https://cota.nervina.dev/aggregator');
 
@@ -41,24 +41,24 @@ async function buildTakerTxExample() {
 
     const orderOutPoints = [
         {
-            txHash: '',
+            txHash: '0x24dcaabc5da6e4dc4e4257b425d718507e1f891fb9e26df41e12dbe3d41afe50',
             index: '0x0',
         },
         {
-            txHash: '',
+            txHash: '0x484c581b5697839ac5adc0bf94894f60482f99f86286d9e8b080561435cf1440',
             index: '0x0',
-        }
+        },
     ];
 
     const { rawTx } = await buildTakerTx({
         collector,
         joyID,
-        buyerAddr,
+        buyer,
         orderOutPoints: orderOutPoints.map(serializeOutPoint),
         ckbAsset: CKBAsset.SPORE,
     });
 
-    const signedTx = await signRawTransaction(rawTx, buyerAddr);
+    const signedTx = await signRawTransaction(rawTx, buyer);
 
     return collector.getCkb().rpc.sendTransaction(signedTx, 'passthrough');
 }
