@@ -3,7 +3,7 @@ import {Layout, Menu } from 'antd';
 import styled from "styled-components";
 import {useLocation, useNavigate} from "react-router-dom";
 const { Header, Content, Footer } = Layout;
-
+import Connect from "./connect.jsx";
 
 const Box = styled.div`
     display: flex;
@@ -64,6 +64,7 @@ const Layout_ckb = ({children}) => {
                         minWidth: 0,
                     }}
                 />
+                <Connect />
             </Header>
             <Content
                 style={{
