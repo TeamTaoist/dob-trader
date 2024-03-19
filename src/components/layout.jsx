@@ -1,11 +1,9 @@
-import React, {useState} from 'react';
-import { Breadcrumb, Layout, Menu, theme } from 'antd';
+import React, {useEffect, useState} from 'react';
+import {Layout, Menu } from 'antd';
 import styled from "styled-components";
+import {useLocation, useNavigate} from "react-router-dom";
 const { Header, Content, Footer } = Layout;
-const items = new Array(15).fill(null).map((_, index) => ({
-    key: index + 1,
-    label: `nav ${index + 1}`,
-}));
+
 
 const Box = styled.div`
     display: flex;
@@ -18,30 +16,49 @@ const ContentBox = styled.div`
     box-sizing: border-box;
     padding: 20px;
 `
+const items =[
+    {
+        key: "home",
+        label: `Home`
+
+    },
+    {
+        key: "test",
+        label: `Test`
+
+    }
+]
 const Layout_ckb = ({children}) => {
+    const [current, setCurrent] = useState('home');
+    const navigate = useNavigate();
+    const location = useLocation();
+    useEffect(() => {
+        console.log(location.pathname)
+        const cur = location.pathname.split("/")[1]
+        setCurrent(cur)
 
-    const [ list,setList] = useState([
-        {
-            key: 0,
-            label: `Home`,
-            value:"home"
-
-        }
-    ])
+    }, []);
+    const onClick = (e) => {
+        console.log('click ', e);
+        setCurrent(e.key);
+        navigate(`/${e.key}`)
+    };
     return (<Box>
         <Layout>
             <Header
                 style={{
                     display: 'flex',
                     alignItems: 'center',
+                    background:"#fff"
                 }}
             >
                 <div className="demo-logo" />
                 <Menu
-                    theme="dark"
+                    onClick={onClick}
+
                     mode="horizontal"
-                    defaultSelectedKeys={['0']}
-                    items={list}
+                    selectedKeys={[current]}
+                    items={items}
                     style={{
                         flex: 1,
                         minWidth: 0,
@@ -50,7 +67,7 @@ const Layout_ckb = ({children}) => {
             </Header>
             <Content
                 style={{
-                    padding: '32px 48px',
+                    padding: '32px 48px 0',
                 }}
             >
 
@@ -63,7 +80,7 @@ const Layout_ckb = ({children}) => {
                     textAlign: 'center',
                 }}
             >
-                Ant Design ©{new Date().getFullYear()} Created by Ant UED
+                ©{new Date().getFullYear()}
             </Footer>
         </Layout>
         </Box>
