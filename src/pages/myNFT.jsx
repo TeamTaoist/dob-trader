@@ -1,6 +1,7 @@
 import Layout_ckb from "../components/layout.jsx";
 import React, { useState } from 'react';
 import { Button, Table } from 'antd';
+import styled from "styled-components";
 
 
 const columns = [
@@ -27,7 +28,7 @@ for (let i = 0; i < 46; i++) {
     });
 }
 
-export default function Home(){
+export default function MyNFT(){
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [loading, setLoading] = useState(false);
     const start = () => {
