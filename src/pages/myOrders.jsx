@@ -1,12 +1,16 @@
 import Layout_ckb from "../components/layout.jsx";
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { Button, Table,Tag } from 'antd';
 import ListModal from "../components/list.jsx";
 import CancelModal from "../components/Cancel.jsx";
 import styled from "styled-components";
 import {shortAddress} from "../utils/global.js";
-import {formatUnit} from "@ckb-lumos/bi";
+import {BI, formatUnit} from "@ckb-lumos/bi";
 import CkbImg from "../assets/ckb.png";
+import {getMySporeOrder, getSporesByRPC} from "../api/index.js";
+import {v4 as uuidv4} from "uuid";
+import {useSelector} from "react-redux";
+import {OrderArgs as OrderArqs} from "@nervina-labs/ckb-dex/lib/order/orderArgs.js";
 
 const Box = styled.div`
     .nft{
@@ -28,59 +32,91 @@ const PriceBox = styled.div`
     }
 `
 
-const data = [];
-for (let i = 0; i < 46; i++) {
-    data.push({
-        key: i,
-        name: `Edward King ${i}`,
-        out_point: "0xa303647db127a198eb0fd42f86717e0e80f500bdcebdac8fb65cf5b0b06123e5",
-        Occupied:"34000000000",
-        price: "5497700000000",
-        img:"https://arseed.web3infra.dev/0kNCtP7aiArSYolnBOedfpUEI9HUKrs21BD7rIRGsVw",
-    });
-}
+
 
 export default function MyOrders(){
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showCancel, setShowCancel] = useState(false);
+    const [list,setList] = useState([])
+    const [last,setLast] = useState('');
+    const account = useSelector(store => store.account);
+    const [selectItem,setSelectItem]  = useState([]);
+
     const columns = [
         {
             title: 'NFT',
             dataIndex: 'nft',
-            render: (_, record) => <img className="nft" src={record.img} />
+            key:"nft",
+            render: (_, record) => <img className="nft" src="https://arseed.web3infra.dev/0kNCtP7aiArSYolnBOedfpUEI9HUKrs21BD7rIRGsVw" />
         },
         {
             title: 'Name',
             dataIndex: 'name',
+            key:"name",
+            render: (_, record) => <span>Unicorn Box</span>
         },
         {
             title: 'Tx',
             dataIndex: 'tx',
-            render: (_, record) => <span>{shortAddress(record.out_point)}</span>
+            render: (_, record) => <span>{shortAddress(record.out_point?.tx_hash)}</span>
         },
-        {
-            title: 'Occupied',
-            dataIndex: 'occupied',
-            render: (_, record) => <Tag>&lt;{formatUnit(record.Occupied,'ckb') } CKBytes&gt;</Tag>
-        },
+        // {
+        //     title: 'Occupied',
+        //     dataIndex: 'occupied',
+        //     render: (_, record) => <Tag>&lt;{formatUnit(record.Occupied,'ckb') } CKBytes&gt;</Tag>
+        // },
         {
             title: 'Price',
             dataIndex: 'price',
-            render: (_, record) => <PriceBox> <img src={CkbImg} alt=""/>{formatUnit(record.price,"ckb")} <span>CKB</span></PriceBox>
+            key:"price",
+            render: (_, record) => <PriceBox> <img src={CkbImg} alt=""/>{formatPrice(record)} <span>CKB</span></PriceBox>
         },
     ];
 
-    const start = () => {
-        setLoading(true);
-        // ajax request after empty completing
-        setTimeout(() => {
-            setSelectedRowKeys([]);
-            setLoading(false);
-        }, 1000);
-    };
+    const formatPrice = (element) =>{
+        let outputArgs = element.output. lock.args;
+        if(outputArgs){
+            const orderAras = OrderArqs. fromHex (outputArgs) ;
+            const {totalValue} = orderAras
+            let rt = BI.from(totalValue).sub(7000000000)
+            return formatUnit(rt,'ckb')
+        }
+    }
+
+
+
+    useEffect(() => {
+        getList()
+    }, []);
+
+    const getList = async () =>{
+        let rt = await getMySporeOrder(account,10,last);
+        const {objects,last_cursor} = rt;
+
+        let arr = objects.map(item=> {
+            return {
+                ...item,
+                key:uuidv4()
+            }
+        })
+        setList([...list,...arr])
+        setLast(last_cursor)
+    }
+
+
     const onSelectChange = (newSelectedRowKeys) => {
-        console.log('selectedRowKeys changed: ', newSelectedRowKeys);
+
+        let newSeletItem = []
+        list.map((item)=>{
+            newSelectedRowKeys.map((sl) =>{
+                if(item.key === sl){
+                    newSeletItem.push(item)
+                }
+            })
+        })
+
+        setSelectItem(newSeletItem);
         setSelectedRowKeys(newSelectedRowKeys);
     };
     const rowSelection = {
@@ -96,7 +132,7 @@ export default function MyOrders(){
     return <Layout_ckb>
 
         {
-            showCancel && <CancelModal handleClose={handleCloseCancel} show={showCancel} selectedRowKeys={selectedRowKeys} />
+            showCancel && <CancelModal handleClose={handleCloseCancel} show={showCancel} selectItem={selectItem} />
         }
         <Box>
             <div
@@ -117,7 +153,9 @@ export default function MyOrders(){
           {hasSelected ? `Selected ${selectedRowKeys.length} items` : ''}
         </span>
             </div>
-            <Table rowSelection={rowSelection} columns={columns} dataSource={data} />
+            <Table rowSelection={rowSelection} columns={columns} dataSource={list} pagination={{
+                position: ["none", "none"],
+            }} />
         </Box>
     </Layout_ckb>
 }

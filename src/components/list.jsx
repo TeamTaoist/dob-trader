@@ -1,6 +1,8 @@
 import {Modal,Flex,Input} from "antd";
 import React, {useEffect, useState} from "react";
 import styled from "styled-components";
+import {handleList} from "../api/index.js";
+import {useSelector} from "react-redux";
 
 const Box = styled.div`
 
@@ -21,17 +23,17 @@ const Box = styled.div`
     }
 `
 
-export default function ListModal({handleClose,show,selectedRowKeys}){
+export default function ListModal({handleClose,show,selectItem}){
     const [total,setTotal] = useState(100)
     const [price,setPrice] = useState('')
+    const connectData = useSelector(store => store.connectData);
+    const account = useSelector(store => store.account);
 
     useEffect(() => {
-        console.error(selectedRowKeys)
-        let sum =  selectedRowKeys.length * price
-
+        let sum =  selectItem.length * price
         setTotal(sum)
 
-    }, [selectedRowKeys,price]);
+    }, [selectItem,price]);
 
     const handleInput = (e) =>{
         const {value} = e.target;
@@ -39,9 +41,20 @@ export default function ListModal({handleClose,show,selectedRowKeys}){
 
     }
 
-    const handleConfirm = () =>{
-        console.log("===handleConfirm=")
-        handleClose()
+    const handleConfirm = async () =>{
+        try {
+
+
+            let txHash = await handleList(connectData,account,price,selectItem[0])
+            console.log("===handleBuildTakerTx==",txHash)
+            window.location.reload()
+
+        }catch (e) {
+            console.error("submitBuy",e)
+        }finally {
+            handleClose()
+        }
+
 
     }
     return <div>
@@ -54,7 +67,7 @@ export default function ListModal({handleClose,show,selectedRowKeys}){
         >
             <Box>
                 <Flex align="center" justify="center" className="item">
-                    <div>List {selectedRowKeys.length} NFT, <span className="total">Total</span></div>
+                    <div>List {selectItem.length} NFT, <span className="total">Total</span></div>
                     <div>
                         <span className="num">{total}</span> <span className="symbol">CKB</span>
                     </div>

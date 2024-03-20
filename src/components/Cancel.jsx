@@ -21,7 +21,7 @@ const Box = styled.div`
     }
 `
 
-export default function CancelModal({handleClose,show,selectedRowKeys}){
+export default function CancelModal({handleClose,show,selectItem}){
 
     const handleConfirm = () =>{
         console.log("===handleConfirm=")
@@ -38,7 +38,7 @@ export default function CancelModal({handleClose,show,selectedRowKeys}){
         >
             <Box>
                 <Flex align="center" justify="center" className="item">
-                    <div>Cancel {selectedRowKeys.length} NFT, <span className="total">Total</span></div>
+                    <div>Cancel {selectItem.length} NFT, <span className="total">Total</span></div>
                     <div>
                         <span className="num">989008</span> <span className="symbol">CKB</span>
                     </div>

@@ -1,6 +1,8 @@
 import {Modal,Flex,Input} from "antd";
 import React, {useEffect, useState} from "react";
 import styled from "styled-components";
+import {handleBuildTakerTx} from "../api/index.js";
+import {useSelector} from "react-redux";
 
 const Box = styled.div`
 
@@ -21,11 +23,21 @@ const Box = styled.div`
     }
 `
 
-export default function BuyModal({handleClose,show,selectedRowKeys}){
+export default function BuyModal({handleClose,show,selectItem}){
+    const connectData = useSelector(store => store.connectData);
+    const account = useSelector(store => store.account);
 
-    const handleConfirm = () =>{
-        console.log("===handleConfirm=")
-        handleClose()
+    const handleConfirm = async () =>{
+        try {
+            let txHash = await handleBuildTakerTx(connectData,account,selectItem)
+            console.log("===handleBuildTakerTx==",txHash)
+
+        }catch (e) {
+            console.error("submitBuy",e)
+        }finally {
+            handleClose()
+        }
+
 
     }
     return <div>
@@ -38,7 +50,7 @@ export default function BuyModal({handleClose,show,selectedRowKeys}){
         >
             <Box>
                 <Flex align="center" justify="center" className="item">
-                    <div>Buy {selectedRowKeys.length} NFT, <span className="total">Total</span></div>
+                    <div>Buy {selectItem.length} NFT, <span className="total">Total</span></div>
                     <div>
                         <span className="num">989008</span> <span className="symbol">CKB</span>
                     </div>

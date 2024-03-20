@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { connect } from '@joyid/ckb';
 import store from "../store";
-import {saveAccount} from "../store/reducer";
+import {saveAccount, saveConnectData} from "../store/reducer";
 import {useSelector} from "react-redux";
 import {Button} from "antd";
 import {shortAddress} from "../utils/global";
@@ -36,6 +36,7 @@ export default function Joyid (){
         try {
             const authData = await connect();
             store.dispatch(saveAccount(authData.address));
+            store.dispatch(saveConnectData(authData));
         } catch (error) {
             console.error(error);
         }
@@ -43,6 +44,7 @@ export default function Joyid (){
 
     const Disconnect = () =>{
         store.dispatch(saveAccount(null));
+        store.dispatch(saveConnectData(null));
     }
 
     return <Box>

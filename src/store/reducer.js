@@ -11,12 +11,16 @@ const mainSlice = createSlice({
         saveLoading(state, action) {
             state.loading = action.payload;
         },
+        saveConnectData(state, action) {
+            state.connectData = action.payload;
+        },
 
     },
 });
 
 export const {
     saveAccount,
+    saveConnectData,
     saveLoading
 } = mainSlice.actions;
 export default mainSlice.reducer;

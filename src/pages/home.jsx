@@ -5,9 +5,12 @@ import BuyModal from "../components/Buy.jsx";
 import Loading from "../components/loading.jsx";
 import styled from "styled-components";
 import {shortAddress} from "../utils/global.js";
-import {formatUnit} from "@ckb-lumos/bi";
+import {BI, formatUnit} from "@ckb-lumos/bi";
 import CkbImg from "../assets/ckb.png";
-
+import {getmarket} from "../api/index.js";
+import {OrderArgs as OrderArqs} from "@nervina-labs/ckb-dex";
+import { v4 as uuidv4 } from 'uuid';
+import {useSelector} from "react-redux";
 
 
 const Box = styled.div`
@@ -29,51 +32,92 @@ const PriceBox = styled.div`
         height: 24px;
     }
 `
-const data = [];
-for (let i = 0; i < 46; i++) {
-    data.push({
-        key: i,
-        name: `Edward King ${i}`,
-        out_point: "0xa303647db127a198eb0fd42f86717e0e80f500bdcebdac8fb65cf5b0b06123e5",
-        Occupied:"34000000000",
-        price: "5497700000000",
-        img:"https://arseed.web3infra.dev/0kNCtP7aiArSYolnBOedfpUEI9HUKrs21BD7rIRGsVw",
-    });
-}
+
+const PageBox = styled.div`
+    background: #f5f5f5;
+    width: 100%;
+    margin-top: 20px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+`
+
 
 export default function Home(){
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
     const [loading, setLoading] = useState(false);
     const [showBuy, setShowBuy] = useState(false);
+    const [list,setList] = useState([])
+    const [last,setLast] = useState('')
+    const [selectItem,setSelectItem]  = useState([]);
+
+    const account = useSelector(store => store.account);
+    console.log(account)
 
     const columns = [
         {
             title: 'NFT',
             dataIndex: 'nft',
-            render: (_, record) => <img className="nft" src={record.img} />
+            key:"nft",
+            render: (_, record) => <img className="nft" src="https://arseed.web3infra.dev/0kNCtP7aiArSYolnBOedfpUEI9HUKrs21BD7rIRGsVw" />
         },
         {
             title: 'Name',
             dataIndex: 'name',
+            key:"name",
+            render: (_, record) => <span>Unicorn Box</span>
         },
         {
             title: 'Tx',
             dataIndex: 'tx',
-            render: (_, record) => <span>{shortAddress(record.out_point)}</span>
+            key:"tx",
+            render: (_, record) => <span>{shortAddress(record?.out_point?.tx_hash)}</span>
         },
-        {
-            title: 'Occupied',
-            dataIndex: 'occupied',
-            render: (_, record) => <Tag>&lt;{formatUnit(record.Occupied,'ckb') } CKBytes&gt;</Tag>
-        },
+        // {
+        //     title: 'Occupied',
+        //     dataIndex: 'occupied',
+        //     render: (_, record) => <Tag>&lt;{formatUnit(record.Occupied,'ckb') } CKBytes&gt;</Tag>
+        // },
         {
             title: 'Price',
             dataIndex: 'price',
-            render: (_, record) => <PriceBox> <img src={CkbImg} alt=""/>{formatUnit(record.price,"ckb")} <span>CKB</span></PriceBox>
+            key:"price",
+            render: (_, record) => <PriceBox> <img src={CkbImg} alt=""/>{formatPrice(record)} <span>CKB</span></PriceBox>
         },
     ];
 
+    useEffect(() => {
+        getList()
+    }, []);
 
+    const getList = async () =>{
+        let rt = await getmarket(10,last);
+        const {objects,last_cursor} = rt;
+        let arr = objects.map(item=> {
+         return {
+             ...item,
+             key:uuidv4()
+         }
+        })
+        setList([...list,...arr])
+        setLast(last_cursor)
+    }
+
+    const formatPrice = (element) =>{
+        let outputArgs = element.output. lock.args;
+        if(outputArgs){
+            const orderAras = OrderArqs. fromHex (outputArgs) ;
+            const {totalValue} = orderAras
+            let rt = BI.from(totalValue).sub(7000000000)
+            return formatUnit(rt,'ckb')
+        }
+    }
+
+    const getMore = () =>{
+        getList()
+    }
 
     const start = () => {
         setLoading(true);
@@ -84,9 +128,19 @@ export default function Home(){
         }, 1000);
     };
     const onSelectChange = (newSelectedRowKeys) => {
-        console.log('selectedRowKeys changed: ', newSelectedRowKeys);
+        let newSeletItem = []
+        list.map((item)=>{
+            newSelectedRowKeys.map((sl) =>{
+                if(item.key === sl){
+                    newSeletItem.push(item)
+                }
+            })
+        })
+
+        setSelectItem(newSeletItem);
         setSelectedRowKeys(newSelectedRowKeys);
     };
+
     const rowSelection = {
         selectedRowKeys,
         onChange: onSelectChange,
@@ -107,7 +161,7 @@ export default function Home(){
     return <Layout_ckb>
 
         {
-            showBuy && <BuyModal handleClose={handleClose} show={showBuy} selectedRowKeys={selectedRowKeys} handleLoading={handleLoading} CloseLoading={CloseLoading} />
+            showBuy && <BuyModal handleClose={handleClose} show={showBuy} selectItem={selectItem} handleLoading={handleLoading} CloseLoading={CloseLoading} />
         }
         {
             loading &&  <Loading />
@@ -133,7 +187,10 @@ export default function Home(){
           {hasSelected ? `Selected ${selectedRowKeys.length} items` : ''}
         </span>
             </div>
-            <Table rowSelection={rowSelection} columns={columns} dataSource={data} />
+            <Table rowSelection={rowSelection} columns={columns} dataSource={list} pagination={{
+                position: ["none", "none"],
+            }} />
+            <PageBox onClick={()=>getMore()}>Load more</PageBox>
         </Box>
     </Layout_ckb>
 }
