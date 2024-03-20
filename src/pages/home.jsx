@@ -1,5 +1,5 @@
 import Layout_ckb from "../components/layout.jsx";
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { Button, Table,Tag } from 'antd';
 import BuyModal from "../components/Buy.jsx";
 import Loading from "../components/loading.jsx";
@@ -7,6 +7,8 @@ import styled from "styled-components";
 import {shortAddress} from "../utils/global.js";
 import {formatUnit} from "@ckb-lumos/bi";
 import CkbImg from "../assets/ckb.png";
+
+
 
 const Box = styled.div`
 .nft{
@@ -71,6 +73,8 @@ export default function Home(){
         },
     ];
 
+
+
     const start = () => {
         setLoading(true);
         // ajax request after empty completing
@@ -98,6 +102,7 @@ export default function Home(){
     const CloseLoading = () =>{
         setLoading(false)
     }
+
 
     return <Layout_ckb>
 
