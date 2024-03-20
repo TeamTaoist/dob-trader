@@ -12,6 +12,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.3.4",
     "@ckb-lumos/bi": "^0.21.1",
+    "@ckb-lumos/lumos": "^0.22.0-next.5",
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@joyid/ckb": "^0.0.6",

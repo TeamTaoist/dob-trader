@@ -2,23 +2,43 @@ import { connect, initConfig, signRawTransaction } from "@joyid/ckb";
 import { Aggregator, buildTakerTx, buildMakerTx, CKBAsset, Collector } from "@nervina-labs/ckb-dex";
 import { serializeOutPoint } from "@nervosnetwork/ckb-sdk-utils";
 import Layout_ckb from "../components/layout.jsx";
-import { getDexLockScript, getSporeTypeScript } from "@nervina-labs/ckb-dex";
+import { getDexLockScript, getSporeTypeScript, append0x, calculateNFTMakerListPackage, serializeScript } from "@nervina-labs/ckb-dex";
 import { Client, cacheExchange, fetchExchange, gql } from "urql";
+import { config, helpers } from "@ckb-lumos/lumos";
 
 export default function Test() {
 
-    buildTakerTxExample().then(txHash => {
-        console.info(`The taker of Spore asset has been finished with tx hash: ${txHash}`)
-    }).catch(err => {
-        console.error(err);
-    })
-
-
-    // buildMakerTxExample().then(txHash => {
-    //     console.info(`The maker of Spore asset has been finished with tx hash: ${txHash}`)
+    // test take multi tx
+    // <<
+    // buildTakerTxExample().then(txHash => {
+    //     console.info(`The taker of Spore asset has been finished with tx hash: ${txHash}`)
     // }).catch(err => {
     //     console.error(err);
     // })
+    // >>
+
+    // test maker multi tx
+    // <<
+    buildMakerTxExample().then(txHash => {
+        console.info(`The maker of Spore asset has been finished with tx hash: ${txHash}`)
+    }).catch(err => {
+        console.error(err);
+    })
+    // >>
+
+    // test get my spores
+    // <<
+    // initConfig({
+    //     name: "JoyID demo",
+    //     logo: "https://fav.farm/🆔",
+    //     joyidAppURL: "https://testnet.joyid.dev",
+    // });
+    // connect().then(connection => {
+    //     getSporesByRPC(connection.address).then(spores => {
+    //         console.log(spores);
+    //     });
+    // });
+    // >>
 
     return <Layout_ckb>Test</Layout_ckb>
 }
@@ -123,29 +143,10 @@ async function buildMakerTxExample() {
 
     const dexLock = getDexLockScript(false);
     const sporeType = getSporeTypeScript(false);
-    const cells = await baseRPC('get_cells', [
-        {
-            script: {
-                code_hash: dexLock.codeHash,
-                hash_type: dexLock.hashType,
-                args: "0x",
-            },
-            script_type: 'lock',
-            script_search_mode: 'prefix',
-            filter: {
-                script: {
-                    code_hash: sporeType.codeHash,
-                    hash_type: sporeType.hashType,
-                    args: "0x",
-                },
-                script_search_mode: 'prefix',
-                script_type: 'type',
-            },
-        }, 'asc', '0x3E8'
-    ]);
+    const spores = await getSporesByRPC(maker);
 
 
-    const listPackage = calculateNFTMakerListPackage(seller)
+    const listPackage = calculateNFTMakerListPackage(maker)
     const totalValue = BigInt(800_0000_0000) + listPackage
 
     // const sporeType: CKBComponents.Script = {
@@ -154,22 +155,19 @@ async function buildMakerTxExample() {
     //     args: '0x22a0eb5644badac17316e17660bd5535f32665b806b1cbd243bb1dddbcca3bbd',
     // }
 
-    const { rawTx, txFee } = await buildMakerTx({
+    const { rawTx } = await buildMakerTx({
         collector,
         joyID,
-        seller,
+        maker,
         // The price whose unit is shannon for CKB native token
         totalValue,
         assetType: append0x(serializeScript(sporeType)),
         ckbAsset: CKBAsset.SPORE,
     })
 
-    const key = keyFromP256Private(SELLER_MAIN_PRIVATE_KEY)
-    const signedTx = signSecp256r1Tx(key, rawTx)
-
     // You can call the `signRawTransaction` method to sign the raw tx with JoyID wallet through @joyid/ckb SDK
     // please make sure the buyer address is the JoyID wallet ckb address
-    // const signedTx = await signRawTransaction(rawTx as CKBTransaction, seller)
+    const signedTx = await signRawTransaction(rawTx, maker)
 
     let txHash = await collector.getCkb().rpc.sendTransaction(signedTx, 'passthrough')
     console.info(`The Spore asset has been listed with tx hash: ${txHash}`)
@@ -206,7 +204,7 @@ async function baseRPC(
 }
 
 
-async function getSpores(address, first, after) {
+async function getSpores(addresses, first, after) {
 
 
     const query_getNFTs = gql`
@@ -245,7 +243,7 @@ async function getSpores(address, first, after) {
         }
         `;
 
-    order = "desc";
+    let order = "desc";
 
     const client = new Client({
         url: "https://spore-graphql.vercel.app/api/graphql",
@@ -268,4 +266,41 @@ async function getSpores(address, first, after) {
         });
 
     return spores;
+}
+
+async function getSporesByRPC(address, limit = 5, after) {
+    const lockScript = helpers.parseAddress(address, { config: config.TESTNET });
+
+    const sporeType = getSporeTypeScript(false); // test network
+
+    const limitHex = append0x(limit.toString(16));
+
+    const paramList = [
+        {
+            script: {
+                code_hash: lockScript.codeHash,
+                hash_type: lockScript.hashType,
+                args: lockScript.args,
+            },
+            script_type: 'lock',
+            script_search_mode: "exact",
+            filter: {
+                script: {
+                    code_hash: sporeType.codeHash,
+                    hash_type: sporeType.hashType,
+                    args: "0x",
+                },
+                script_search_mode: 'prefix',
+                script_type: 'type',
+            },
+        }, 'desc', limitHex
+    ];
+
+    if (after) {
+        paramList.push(after);
+    }
+
+    const cells = await baseRPC('get_cells', paramList);
+
+    return cells;
 }
