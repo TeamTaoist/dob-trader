@@ -1,8 +1,8 @@
 import { connect, initConfig, signRawTransaction } from "@joyid/ckb";
 import { Aggregator, buildTakerTx, buildMakerTx, CKBAsset, Collector } from "@nervina-labs/ckb-dex";
-import { serializeOutPoint } from "@nervosnetwork/ckb-sdk-utils";
+import { serializeOutPoint, serializeScript } from "@nervosnetwork/ckb-sdk-utils";
 import Layout_ckb from "../components/layout.jsx";
-import { getDexLockScript, getSporeTypeScript, append0x, calculateNFTMakerListPackage, serializeScript } from "@nervina-labs/ckb-dex";
+import { getDexLockScript, getSporeTypeScript, append0x, calculateNFTMakerListPackage } from "@nervina-labs/ckb-dex";
 import { Client, cacheExchange, fetchExchange, gql } from "urql";
 import { config, helpers } from "@ckb-lumos/lumos";
 
@@ -17,7 +17,7 @@ export default function Test() {
     // })
     // >>
 
-    // test maker multi tx
+    // test maker one tx
     // <<
     buildMakerTxExample().then(txHash => {
         console.info(`The maker of Spore asset has been finished with tx hash: ${txHash}`)
@@ -132,7 +132,9 @@ async function buildMakerTxExample() {
 
     const connectData = await connect();
 
-    const maker = connectData.address;
+    const seller = connectData.address;
+
+    console.log('maker', seller);
 
     const aggregator = new Aggregator('https://cota.nervina.dev/aggregator');
 
@@ -141,24 +143,25 @@ async function buildMakerTxExample() {
         aggregator
     };
 
-    const dexLock = getDexLockScript(false);
-    const sporeType = getSporeTypeScript(false);
-    const spores = await getSporesByRPC(maker);
+    const spores = await getSporesByRPC(seller);
+    console.log(spores);
 
+    if (spores.objects.length <= 0) {
+        throw new Error("not find can maker spore");
+    }
 
-    const listPackage = calculateNFTMakerListPackage(maker)
+    const listPackage = calculateNFTMakerListPackage(seller)
     const totalValue = BigInt(800_0000_0000) + listPackage
 
-    // const sporeType: CKBComponents.Script = {
-    //     codeHash: '0x5e063b4c0e7abeaa6a428df3b693521a3050934cf3b0ae97a800d1bc31449398',
-    //     hashType: 'data1',
-    //     args: '0x22a0eb5644badac17316e17660bd5535f32665b806b1cbd243bb1dddbcca3bbd',
-    // }
+    const sporeType = {
+        ...getSporeTypeScript(false),
+        args: spores.objects[0].output.type.args,
+    }
 
     const { rawTx } = await buildMakerTx({
         collector,
         joyID,
-        maker,
+        seller,
         // The price whose unit is shannon for CKB native token
         totalValue,
         assetType: append0x(serializeScript(sporeType)),
@@ -167,12 +170,9 @@ async function buildMakerTxExample() {
 
     // You can call the `signRawTransaction` method to sign the raw tx with JoyID wallet through @joyid/ckb SDK
     // please make sure the buyer address is the JoyID wallet ckb address
-    const signedTx = await signRawTransaction(rawTx, maker)
+    const signedTx = await signRawTransaction(rawTx, seller)
 
-    let txHash = await collector.getCkb().rpc.sendTransaction(signedTx, 'passthrough')
-    console.info(`The Spore asset has been listed with tx hash: ${txHash}`)
-
-    return '';
+    return collector.getCkb().rpc.sendTransaction(signedTx, 'passthrough')
 }
 
 async function baseRPC(
