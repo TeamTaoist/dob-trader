@@ -106,7 +106,7 @@ export default function Home(){
     }
 
     const formatPrice = (element) =>{
-        let outputArgs = element.output. lock.args;
+        let outputArgs = element.output.lock.args;
         if(outputArgs){
             const orderAras = OrderArqs. fromHex (outputArgs) ;
             const {totalValue} = orderAras
@@ -119,14 +119,6 @@ export default function Home(){
         getList()
     }
 
-    const start = () => {
-        setLoading(true);
-        // ajax request after empty completing
-        setTimeout(() => {
-            setSelectedRowKeys([]);
-            setLoading(false);
-        }, 1000);
-    };
     const onSelectChange = (newSelectedRowKeys) => {
         let newSeletItem = []
         list.map((item)=>{
