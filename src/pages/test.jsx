@@ -2,7 +2,7 @@ import { connect, initConfig, signRawTransaction } from "@joyid/ckb";
 import { Aggregator, buildTakerTx, buildMakerTx, CKBAsset, Collector } from "@nervina-labs/ckb-dex";
 import { serializeOutPoint, serializeScript } from "@nervosnetwork/ckb-sdk-utils";
 import Layout_ckb from "../components/layout.jsx";
-import { getDexLockScript, getSporeTypeScript, append0x, calculateNFTMakerListPackage } from "@nervina-labs/ckb-dex";
+import { getDexLockScript, getSporeTypeScript, append0x, calculateNFTMakerListPackage, OrderArgs, keyFromP256Private, addressFromP256PrivateKey } from "@nervina-labs/ckb-dex";
 import { Client, cacheExchange, fetchExchange, gql } from "urql";
 import { config, helpers } from "@ckb-lumos/lumos";
 
@@ -19,11 +19,11 @@ export default function Test() {
 
     // test maker one tx
     // <<
-    buildMakerTxExample().then(txHash => {
-        console.info(`The maker of Spore asset has been finished with tx hash: ${txHash}`)
-    }).catch(err => {
-        console.error(err);
-    })
+    // buildMakerTxExample().then(txHash => {
+    //     console.info(`The maker of Spore asset has been finished with tx hash: ${txHash}`)
+    // }).catch(err => {
+    //     console.error(err);
+    // })
     // >>
 
     // test get my spores
@@ -40,7 +40,50 @@ export default function Test() {
     // });
     // >>
 
+    // test get my order
+    // <<
+    initConfig({
+        name: "JoyID demo",
+        logo: "https://fav.farm/🆔",
+        joyidAppURL: "https://testnet.joyid.dev",
+    });
+    connect().then(connection => {
+        getMySporeOrder(connection.address).then(orders => {
+            console.log(orders);
+        });
+    });
+    // >>
+
     return <Layout_ckb>Test</Layout_ckb>
+}
+
+async function getMySporeOrder(address) {
+    const ownerlock = helpers.parseAddress(address, { config: config.TESTNET });
+
+    const dexLock = getDexLockScript(false);
+    const sporeType = getSporeTypeScript(false);
+    const cells = await baseRPC('get_cells', [
+        {
+            script: {
+                code_hash: dexLock.codeHash,
+                hash_type: dexLock.hashType,
+                args: `${serializeScript(ownerlock)}`,
+            },
+            script_type: 'lock',
+            script_search_mode: 'prefix',
+            filter: {
+                script: {
+                    code_hash: sporeType.codeHash,
+                    hash_type: sporeType.hashType,
+                    args: "0x",
+                },
+                script_search_mode: 'prefix',
+                script_type: 'type',
+            },
+        }, 'asc', '0x3E8'
+    ]);
+
+    return cells;
 }
 
 
@@ -60,6 +103,8 @@ async function buildTakerTxExample() {
     const connectData = await connect();
 
     const buyer = connectData.address;
+
+    console.log("buyer", buyer);
 
     const aggregator = new Aggregator('https://cota.nervina.dev/aggregator');
 
@@ -88,20 +133,38 @@ async function buildTakerTxExample() {
                 script_search_mode: 'prefix',
                 script_type: 'type',
             },
-        }, 'desc', '0x3E8'
+        }, 'asc', '0x3E8'
     ]);
 
     // cells order
     console.log(cells);
 
     const orderOutPoints = [];
-    for (let i = 0; i < cells.objects.length && i < 3; i++) {
+    for (let i = 0; i < cells.objects.length; i++) {
         const element = cells.objects[i];
-        console.log(element);
-        orderOutPoints.push({
-            txHash: element.out_point.tx_hash,
-            index: element.out_point.index,
-        });
+
+        let outputArgs = element.output.lock.args;
+        if (outputArgs) {
+            try {
+                const orderArgs = OrderArgs.fromHex(outputArgs);
+                console.log(orderArgs.totalValue, orderArgs.setup);
+
+                if (orderArgs.totalValue < BigInt(200_0000_0000)) {
+                    console.log(element);
+                    orderOutPoints.push({
+                        txHash: element.out_point.tx_hash,
+                        index: element.out_point.index,
+                    });
+                    break;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    }
+
+    if (orderOutPoints.length <= 0) {
+        throw new Error("not find order");
     }
 
     const { rawTx } = await buildTakerTx({
@@ -112,7 +175,9 @@ async function buildTakerTxExample() {
         ckbAsset: CKBAsset.SPORE,
     });
 
-    const signedTx = await signRawTransaction(rawTx, buyer);
+    const signedTx = await signRawTransaction(rawTx, buyer, { config: config.TESTNET });
+
+    console.log('signedTx', signedTx);
 
     return collector.getCkb().rpc.sendTransaction(signedTx, 'passthrough');
 }
@@ -151,7 +216,9 @@ async function buildMakerTxExample() {
     }
 
     const listPackage = calculateNFTMakerListPackage(seller)
-    const totalValue = BigInt(800_0000_0000) + listPackage
+    const totalValue = BigInt(100_0000_0000) + listPackage
+
+    console.log(totalValue);
 
     const sporeType = {
         ...getSporeTypeScript(false),
