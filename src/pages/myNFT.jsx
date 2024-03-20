@@ -50,33 +50,7 @@ export default function MyNFT(){
     const [loading, setLoading] = useState(false);
     const [showList, setShowList] = useState(false);
     const [showCancel, setShowCancel] = useState(false);
-    const columns = [
-        {
-            title: 'NFT',
-            dataIndex: 'nft',
-            render: (_, record) => <img className="nft" src={record.img} />
-        },
-        {
-            title: 'Name',
-            dataIndex: 'name',
-        },
-        {
-            title: 'Tx',
-            dataIndex: 'tx',
-            render: (_, record) => <span>{shortAddress(record.out_point)}</span>
-        },
-        {
-            title: 'Occupied',
-            dataIndex: 'occupied',
-            render: (_, record) => <Tag>&lt;{formatUnit(record.Occupied,'ckb') } CKBytes&gt;</Tag>
-        },
-        {
-            title: 'Price',
-            dataIndex: 'price',
-            render: (_, record) => <PriceBox> <img src={CkbImg} alt=""/>{formatUnit(record.price,"ckb")} <span>CKB</span></PriceBox>
-        },
-    ];
-
+   
     const columns = [
         {
             title: 'NFT',
