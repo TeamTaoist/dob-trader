@@ -2,7 +2,7 @@ import { connect, initConfig, signRawTransaction } from "@joyid/ckb";
 import { Aggregator, buildTakerTx, buildMakerTx, CKBAsset, Collector } from "@nervina-labs/ckb-dex";
 import { serializeOutPoint, serializeScript } from "@nervosnetwork/ckb-sdk-utils";
 import Layout_ckb from "../components/layout.jsx";
-import { getDexLockScript, getSporeTypeScript, append0x, calculateNFTMakerListPackage, OrderArgs, keyFromP256Private, addressFromP256PrivateKey } from "@nervina-labs/ckb-dex";
+import { getDexLockScript, getSporeTypeScript, append0x, calculateNFTMakerListPackage, OrderArgs, buildCancelTx } from "@nervina-labs/ckb-dex";
 import { Client, cacheExchange, fetchExchange, gql } from "urql";
 import { config, helpers } from "@ckb-lumos/lumos";
 
@@ -10,11 +10,11 @@ export default function Test() {
 
     // test take multi tx
     // <<
-    buildTakerTxExample().then(txHash => {
-        console.info(`The taker of Spore asset has been finished with tx hash: ${txHash}`)
-    }).catch(err => {
-        console.error(err);
-    })
+    // buildTakerTxExample().then(txHash => {
+    //     console.info(`The taker of Spore asset has been finished with tx hash: ${txHash}`)
+    // }).catch(err => {
+    //     console.error(err);
+    // })
     // >>
 
     // test maker one tx
@@ -24,6 +24,15 @@ export default function Test() {
     // }).catch(err => {
     //     console.error(err);
     // })
+    // >>
+
+    // test cancel multi order tx
+    // <<
+    buildCancelTxExample().then(txHash => {
+        console.info(`The maker of Spore asset has been finished with tx hash: ${txHash}`)
+    }).catch(err => {
+        console.error(err);
+    })
     // >>
 
     // test get my spores
@@ -55,6 +64,90 @@ export default function Test() {
     // >>
 
     return <Layout_ckb>Test</Layout_ckb>
+}
+
+async function buildCancelTxExample() {
+    // use test net
+    const collector = new Collector({
+        ckbNodeUrl: 'https://testnet.ckb.dev/rpc',
+        ckbIndexerUrl: 'https://testnet.ckb.dev/indexer',
+    });
+
+    initConfig({
+        name: "JoyID demo",
+        logo: "https://fav.farm/🆔",
+        joyidAppURL: "https://testnet.joyid.dev",
+    });
+
+    const connectData = await connect();
+
+    const seller = connectData.address;
+
+    console.log("seller", seller);
+
+    const aggregator = new Aggregator('https://cota.nervina.dev/aggregator');
+
+    const joyID = {
+        connectData,
+        aggregator
+    };
+
+    const dexLock = getDexLockScript(false);
+    const sporeType = getSporeTypeScript(false);
+    const ownerlock = helpers.parseAddress(seller, { config: config.TESTNET });
+    const cells = await baseRPC('get_cells', [
+        {
+            script: {
+                code_hash: dexLock.codeHash,
+                hash_type: dexLock.hashType,
+                args: `${serializeScript(ownerlock)}`,
+            },
+            script_type: 'lock',
+            script_search_mode: 'prefix',
+            filter: {
+                script: {
+                    code_hash: sporeType.codeHash,
+                    hash_type: sporeType.hashType,
+                    args: "0x",
+                },
+                script_search_mode: 'prefix',
+                script_type: 'type',
+            },
+        }, 'asc', '0x3E8'
+    ]);
+
+    // cells order
+    console.log(cells);
+
+    const orderOutPoints = [];
+    for (let i = 0; i < cells.objects.length; i++) {
+        const element = cells.objects[i];
+
+        orderOutPoints.push({
+            txHash: element.out_point.tx_hash,
+            index: element.out_point.index,
+        });
+    }
+
+    if (orderOutPoints.length <= 0) {
+        throw new Error("not find order");
+    }
+
+    const { rawTx, witnessIndex } = await buildCancelTx({
+        collector,
+        joyID,
+        seller,
+        orderOutPoints: orderOutPoints.map(serializeOutPoint),
+        ckbAsset: CKBAsset.SPORE,
+    })
+
+    console.log(rawTx);
+
+    const signedTx = await signRawTransaction(rawTx, seller, { config: config.TESTNET, witnessIndex });
+
+    console.log('signedTx', signedTx);
+
+    return collector.getCkb().rpc.sendTransaction(signedTx, 'passthrough');
 }
 
 async function getMySporeOrder(address) {
@@ -245,7 +338,7 @@ async function buildMakerTxExample() {
 
     console.log('signed tx', signedTx);
 
-    // return collector.getCkb().rpc.sendTransaction(signedTx, 'passthrough')
+    return collector.getCkb().rpc.sendTransaction(signedTx, 'passthrough')
 }
 
 async function baseRPC(
