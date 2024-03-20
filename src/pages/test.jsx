@@ -68,7 +68,7 @@ async function buildTakerTxExample() {
                 script_search_mode: 'prefix',
                 script_type: 'type',
             },
-        }, 'asc', '0x3E8'
+        }, 'desc', '0x3E8'
     ]);
 
     // cells order
@@ -77,9 +77,10 @@ async function buildTakerTxExample() {
     const orderOutPoints = [];
     for (let i = 0; i < cells.objects.length && i < 3; i++) {
         const element = cells.objects[i];
+        console.log(element);
         orderOutPoints.push({
-            txHash: element.output_point.tx_hash,
-            index: element.output_point.index,
+            txHash: element.out_point.tx_hash,
+            index: element.out_point.index,
         });
     }
 
