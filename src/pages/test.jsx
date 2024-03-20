@@ -10,11 +10,11 @@ export default function Test() {
 
     // test take multi tx
     // <<
-    // buildTakerTxExample().then(txHash => {
-    //     console.info(`The taker of Spore asset has been finished with tx hash: ${txHash}`)
-    // }).catch(err => {
-    //     console.error(err);
-    // })
+    buildTakerTxExample().then(txHash => {
+        console.info(`The taker of Spore asset has been finished with tx hash: ${txHash}`)
+    }).catch(err => {
+        console.error(err);
+    })
     // >>
 
     // test maker one tx
@@ -42,16 +42,16 @@ export default function Test() {
 
     // test get my order
     // <<
-    initConfig({
-        name: "JoyID demo",
-        logo: "https://fav.farm/🆔",
-        joyidAppURL: "https://testnet.joyid.dev",
-    });
-    connect().then(connection => {
-        getMySporeOrder(connection.address).then(orders => {
-            console.log(orders);
-        });
-    });
+    // initConfig({
+    //     name: "JoyID demo",
+    //     logo: "https://fav.farm/🆔",
+    //     joyidAppURL: "https://testnet.joyid.dev",
+    // });
+    // connect().then(connection => {
+    //     getMySporeOrder(connection.address).then(orders => {
+    //         console.log(orders);
+    //     });
+    // });
     // >>
 
     return <Layout_ckb>Test</Layout_ckb>
@@ -167,7 +167,7 @@ async function buildTakerTxExample() {
         throw new Error("not find order");
     }
 
-    const { rawTx } = await buildTakerTx({
+    let { rawTx, witnessIndex } = await buildTakerTx({
         collector,
         joyID,
         buyer,
@@ -175,7 +175,9 @@ async function buildTakerTxExample() {
         ckbAsset: CKBAsset.SPORE,
     });
 
-    const signedTx = await signRawTransaction(rawTx, buyer, { config: config.TESTNET });
+    console.log(rawTx);
+
+    const signedTx = await signRawTransaction(rawTx, buyer, { config: config.TESTNET, witnessIndex });
 
     console.log('signedTx', signedTx);
 
@@ -199,7 +201,7 @@ async function buildMakerTxExample() {
 
     const seller = connectData.address;
 
-    console.log('maker', seller);
+    console.log('maker', seller, connectData);
 
     const aggregator = new Aggregator('https://cota.nervina.dev/aggregator');
 
@@ -235,11 +237,15 @@ async function buildMakerTxExample() {
         ckbAsset: CKBAsset.SPORE,
     })
 
+    console.log(rawTx);
+
     // You can call the `signRawTransaction` method to sign the raw tx with JoyID wallet through @joyid/ckb SDK
     // please make sure the buyer address is the JoyID wallet ckb address
     const signedTx = await signRawTransaction(rawTx, seller)
 
-    return collector.getCkb().rpc.sendTransaction(signedTx, 'passthrough')
+    console.log('signed tx', signedTx);
+
+    // return collector.getCkb().rpc.sendTransaction(signedTx, 'passthrough')
 }
 
 async function baseRPC(
