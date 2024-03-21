@@ -175,7 +175,7 @@ export default function MyNFT(){
                     gap:10
                 }}
             >
-                <Button type="primary"  onClick={() => setShowList(true)}>
+                <Button type="primary"  disabled={!selectItem?.length}  onClick={() => setShowList(true)}>
                     List
                 </Button>
                 <span
