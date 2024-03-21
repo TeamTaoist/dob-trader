@@ -89,8 +89,9 @@ export default function MyOrders(){
 
 
     useEffect(() => {
+        if(!account)return;
         getList()
-    }, []);
+    }, [account]);
 
     const getList = async () =>{
         store.dispatch(saveLoading(true));

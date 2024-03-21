@@ -82,8 +82,9 @@ export default function MyNFT(){
     ];
 
     useEffect(() => {
+        if(!account)return;
         getList()
-    }, []);
+    }, [account]);
 
     const getList = async () =>{
         store.dispatch(saveLoading(true));
