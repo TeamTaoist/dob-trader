@@ -1,12 +1,14 @@
 import Layout_ckb from "../components/layout.jsx";
 import React, {useEffect, useState} from 'react';
-import { Button, Table,Tag } from 'antd';
+import {Button, notification, Table, Tag} from 'antd';
 import ListModal from "../components/list.jsx";
 import styled from "styled-components";
 import {shortAddress} from "../utils/global.js";
 import {useSelector} from "react-redux";
 import {getSporesByRPC} from "../api/index.js";
 import {v4 as uuidv4} from "uuid";
+import store from "../store/index.js";
+import {saveLoading} from "../store/reducer.js";
 
 const Box = styled.div`
 .nft{
@@ -28,15 +30,24 @@ const PriceBox = styled.div`
     }
 `
 
+const PageBox = styled.div`
+    background: #f5f5f5;
+    width: 100%;
+    margin-top: 20px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+`
+
 export default function MyNFT(){
     const account = useSelector(store => store.account);
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [showList, setShowList] = useState(false);
     const [list,setList] = useState([])
     const [last,setLast] = useState('');
     const [selectItem,setSelectItem]  = useState([]);
-
+    const [more,setMore] = useState(false)
 
     const columns = [
         {
@@ -75,17 +86,27 @@ export default function MyNFT(){
     }, []);
 
     const getList = async () =>{
-        let rt = await getSporesByRPC(account,10,last);
-        const {objects,last_cursor} = rt;
+        store.dispatch(saveLoading(true));
+        try{
+            let rt = await getSporesByRPC(account,5,last);
+            const {objects,last_cursor} = rt;
 
-        let arr = objects.map(item=> {
-            return {
-                ...item,
-                key:uuidv4()
-            }
-        })
-        setList([...list,...arr])
-        setLast(last_cursor)
+            let arr = objects.map(item=> {
+                return {
+                    ...item,
+                    key:uuidv4()
+                }
+            })
+            setMore(arr.length===5)
+            setList([...list,...arr])
+            setLast(last_cursor)
+
+        }catch (e) {
+            console.error(e)
+        }finally {
+            store.dispatch(saveLoading(false));
+        }
+
     }
 
 
@@ -114,11 +135,38 @@ export default function MyNFT(){
         setShowList(false);
     }
 
+    const getMore = () =>{
+        if(more){
+            getList()
+        }
+    }
+
+    const [api,contextHolder] = notification.useNotification();
+    const openNotificationWithIcon = (type,tips,desc) => {
+        api[type]({
+            message: tips,
+            description:desc,
+            duration: 2000,
+        });
+    };
+
+    const handleResult = (type,tip,desc,isEnd) =>{
+        openNotificationWithIcon(type,tip,desc)
+        if(isEnd){
+            setTimeout(()=>{
+                window.location.reload()
+            },2000)
+        }
+
+    }
+
     return <Layout_ckb>
 
         {
-            showList && <ListModal handleClose={handleClose} show={showList} selectItem={selectItem} />
+            showList && <ListModal handleClose={handleClose} show={showList} selectItem={selectItem}  handleResult={handleResult}/>
         }
+
+        {contextHolder}
         <Box>
             <div
                 style={{
@@ -138,9 +186,10 @@ export default function MyNFT(){
           {hasSelected ? `Selected ${selectedRowKeys.length} items` : ''}
         </span>
             </div>
-            <Table rowSelection={rowSelection} columns={columns} dataSource={list} pagination={{
-                position: ["none", "none"],
-            }} />
+            <Table rowSelection={rowSelection} columns={columns} dataSource={list} pagination={false} />
+            {
+                more&&<PageBox onClick={()=>getMore()}>Load more</PageBox>
+            }
         </Box>
     </Layout_ckb>
 }

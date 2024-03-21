@@ -3,6 +3,8 @@ import React, {useEffect, useState} from "react";
 import styled from "styled-components";
 import {handleList} from "../api/index.js";
 import {useSelector} from "react-redux";
+import store from "../store/index.js";
+import {saveLoading} from "../store/reducer.js";
 
 const Box = styled.div`
 
@@ -23,7 +25,7 @@ const Box = styled.div`
     }
 `
 
-export default function ListModal({handleClose,show,selectItem}){
+export default function ListModal({handleClose,show,selectItem,handleResult}){
     const [total,setTotal] = useState(100)
     const [price,setPrice] = useState('')
     const connectData = useSelector(store => store.connectData);
@@ -42,21 +44,24 @@ export default function ListModal({handleClose,show,selectItem}){
     }
 
     const handleConfirm = async () =>{
-        try {
+        store.dispatch(saveLoading(true));
+        for await(let [index,item] of selectItem.entries() ){
+            try {
+                let txHash = await handleList(connectData,account,price,item)
+                handleResult('success',`Success: ${index + 1}`,txHash, index === selectItem.length -1)
 
-
-            let txHash = await handleList(connectData,account,price,selectItem[0])
-            console.log("===handleBuildTakerTx==",txHash)
-            window.location.reload()
-
-        }catch (e) {
-            console.error("submitBuy",e)
-        }finally {
-            handleClose()
+            }catch (e) {
+                console.error("list",e)
+                handleResult('error',`Failed: ${index + 1}`,e.message, index === selectItem.length - 1)
+            }finally {
+                if(index === selectItem.length - 1){
+                    handleClose()
+                    store.dispatch(saveLoading(false));
+                }
+            }
         }
-
-
     }
+
     return <div>
         <Modal
             title="List"

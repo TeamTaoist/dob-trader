@@ -1,7 +1,7 @@
 import {config, helpers} from "@ckb-lumos/lumos";
 import {
     Aggregator,
-    append0x, buildMakerTx,
+    append0x, buildCancelTx, buildMakerTx,
     buildTakerTx, calculateNFTMakerListPackage, CKBAsset,
     Collector,
     getDexLockScript,
@@ -167,7 +167,7 @@ export async function handleBuildTakerTx(connectData,account,selectArr) {
     }
 
     console.log(orderOutPoints);
-    const { rawTx } = await buildTakerTx({
+    const { rawTx, witnessIndex } = await buildTakerTx({
         collector,
         joyID,
         buyer,
@@ -178,7 +178,7 @@ export async function handleBuildTakerTx(connectData,account,selectArr) {
     console.log(rawTx)
 
 
-    const signedTx = await signRawTransaction(rawTx, buyer);
+    const signedTx = await signRawTransaction(rawTx, buyer, { config: config.TESTNET, witnessIndex });
 
     return collector.getCkb().rpc.sendTransaction(signedTx, 'passthrough');
 }
@@ -260,4 +260,63 @@ export async function getMySporeOrder(address,limit = 5,after) {
     const cells = await baseRPC('get_cells', paramList);
 
     return cells;
+}
+
+export  async function handleCancelOrder(connectData,account,selectItem) {
+    // use test net
+    const collector = new Collector({
+        ckbNodeUrl: 'https://testnet.ckb.dev/rpc',
+        ckbIndexerUrl: 'https://testnet.ckb.dev/indexer',
+    });
+
+    initConfig({
+        name: "JoyID demo",
+        logo: "https://fav.farm/🆔",
+        joyidAppURL: "https://testnet.joyid.dev",
+    });
+
+
+    const seller = account;
+
+    const aggregator = new Aggregator('https://cota.nervina.dev/aggregator');
+
+    const joyID = {
+        connectData,
+        aggregator
+    };
+
+    const dexLock = getDexLockScript(false);
+    const sporeType = getSporeTypeScript(false);
+    const ownerlock = helpers.parseAddress(seller, { config: config.TESTNET });
+
+
+    const orderOutPoints = [];
+    for (let i = 0; i < selectItem.length; i++) {
+        const element = selectItem[i];
+
+        orderOutPoints.push({
+            txHash: element.out_point.tx_hash,
+            index: element.out_point.index,
+        });
+    }
+
+    if (orderOutPoints.length <= 0) {
+        throw new Error("not find order");
+    }
+
+    const { rawTx, witnessIndex } = await buildCancelTx({
+        collector,
+        joyID,
+        seller,
+        orderOutPoints: orderOutPoints.map(serializeOutPoint),
+        ckbAsset: CKBAsset.SPORE,
+    })
+
+    console.log(rawTx);
+
+    const signedTx = await signRawTransaction(rawTx, seller, { config: config.TESTNET, witnessIndex });
+
+    console.log('signedTx', signedTx);
+
+    return collector.getCkb().rpc.sendTransaction(signedTx, 'passthrough');
 }

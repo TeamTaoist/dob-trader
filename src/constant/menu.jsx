@@ -13,9 +13,5 @@ export const items =[
         key: "myOrders",
         label: `My Orders`
 
-    },
-    {
-        key: "test",
-        label: `Test`
     }
 ]

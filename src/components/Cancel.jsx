@@ -3,6 +3,10 @@ import React, {useEffect, useState} from "react";
 import styled from "styled-components";
 import {BI, formatUnit} from "@ckb-lumos/bi";
 import {OrderArgs as OrderArqs} from "@nervina-labs/ckb-dex";
+import {handleCancelOrder, handleList} from "../api/index.js";
+import {useSelector} from "react-redux";
+import store from "../store/index.js";
+import {saveLoading} from "../store/reducer.js";
 
 const Box = styled.div`
 
@@ -23,8 +27,9 @@ const Box = styled.div`
     }
 `
 
-export default function CancelModal({handleClose,show,selectItem}){
-
+export default function CancelModal({handleClose,show,selectItem,handleResult}){
+    const connectData = useSelector(store => store.connectData);
+    const account = useSelector(store => store.account);
     const [price,setPrice] = useState(0)
 
     let Sum = BI.from(0)
@@ -44,9 +49,19 @@ export default function CancelModal({handleClose,show,selectItem}){
 
     }, [selectItem]);
 
-    const handleConfirm = () =>{
-        console.log("===handleConfirm=")
-        handleClose()
+    const handleConfirm = async() =>{
+        store.dispatch(saveLoading(true));
+        try {
+            let txHash = await handleCancelOrder(connectData,account,selectItem)
+            handleResult('success',"Success",txHash)
+
+        }catch (e) {
+            console.error("cancel",e)
+            handleResult('error',"Failed",e.message)
+        }finally {
+            handleClose()
+            store.dispatch(saveLoading(false));
+        }
 
     }
     return <div>

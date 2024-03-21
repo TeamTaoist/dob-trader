@@ -5,6 +5,8 @@ import {useLocation, useNavigate} from "react-router-dom";
 const { Header, Content, Footer } = Layout;
 import Connect from "./connect.jsx";
 import {items} from "../constant/menu.jsx";
+import {useSelector} from "react-redux";
+import Loading from "./loading.jsx";
 
 const Box = styled.div`
     display: flex;
@@ -22,16 +24,25 @@ const Layout_ckb = ({children}) => {
     const [current, setCurrent] = useState('home');
     const navigate = useNavigate();
     const location = useLocation();
+
+    const loading = useSelector(store => store.loading);
+
     useEffect(() => {
         const cur = location.pathname.split("/")[1]
         setCurrent(cur)
     }, []);
+
+
     const onClick = (e) => {
         setCurrent(e.key);
         navigate(`/${e.key}`)
     };
     return (<Box>
             <Layout>
+                {
+                    loading &&      <Loading />
+                }
+
                 <Header
                     style={{
                         display: 'flex',

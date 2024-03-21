@@ -1,6 +1,6 @@
 import Layout_ckb from "../components/layout.jsx";
 import React, {useEffect, useState} from 'react';
-import { Button, Table,Tag } from 'antd';
+import {Button, notification, Table, Tag} from 'antd';
 import ListModal from "../components/list.jsx";
 import CancelModal from "../components/Cancel.jsx";
 import styled from "styled-components";
@@ -11,6 +11,8 @@ import {getMySporeOrder, getSporesByRPC} from "../api/index.js";
 import {v4 as uuidv4} from "uuid";
 import {useSelector} from "react-redux";
 import {OrderArgs as OrderArqs} from "@nervina-labs/ckb-dex/lib/order/orderArgs.js";
+import store from "../store/index.js";
+import {saveLoading} from "../store/reducer.js";
 
 const Box = styled.div`
     .nft{
@@ -91,17 +93,25 @@ export default function MyOrders(){
     }, []);
 
     const getList = async () =>{
-        let rt = await getMySporeOrder(account,10,last);
-        const {objects,last_cursor} = rt;
+        store.dispatch(saveLoading(true));
+        try{
+            let rt = await getMySporeOrder(account,10,last);
+            const {objects,last_cursor} = rt;
 
-        let arr = objects.map(item=> {
-            return {
-                ...item,
-                key:uuidv4()
-            }
-        })
-        setList([...list,...arr])
-        setLast(last_cursor)
+            let arr = objects.map(item=> {
+                return {
+                    ...item,
+                    key:uuidv4()
+                }
+            })
+            setList([...list,...arr])
+            setLast(last_cursor)
+        }catch (e) {
+            console.error(e)
+        }finally {
+            store.dispatch(saveLoading(false));
+        }
+
     }
 
 
@@ -119,6 +129,7 @@ export default function MyOrders(){
         setSelectItem(newSeletItem);
         setSelectedRowKeys(newSelectedRowKeys);
     };
+
     const rowSelection = {
         selectedRowKeys,
         onChange: onSelectChange,
@@ -129,11 +140,31 @@ export default function MyOrders(){
     const handleCloseCancel = () =>{
         setShowCancel(false);
     }
+
+
+    const [api,contextHolder] = notification.useNotification();
+    const openNotificationWithIcon = (type,tips,desc) => {
+        api[type]({
+            message: tips,
+            description:desc,
+            duration: 2000,
+        });
+    };
+
+    const handleResult = (type,tip,desc) =>{
+        openNotificationWithIcon(type,tip,desc)
+        setTimeout(()=>{
+            window.location.reload()
+        },2000)
+
+
+    }
     return <Layout_ckb>
 
         {
-            showCancel && <CancelModal handleClose={handleCloseCancel} show={showCancel} selectItem={selectItem} />
+            showCancel && <CancelModal handleClose={handleCloseCancel} show={showCancel} selectItem={selectItem}  handleResult={handleResult} />
         }
+        {contextHolder}
         <Box>
             <div
                 style={{
@@ -153,9 +184,7 @@ export default function MyOrders(){
           {hasSelected ? `Selected ${selectedRowKeys.length} items` : ''}
         </span>
             </div>
-            <Table rowSelection={rowSelection} columns={columns} dataSource={list} pagination={{
-                position: ["none", "none"],
-            }} />
+            <Table rowSelection={rowSelection} columns={columns} dataSource={list} pagination={false} />
         </Box>
     </Layout_ckb>
 }

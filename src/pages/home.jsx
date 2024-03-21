@@ -1,8 +1,7 @@
 import Layout_ckb from "../components/layout.jsx";
 import React, {useEffect, useState} from 'react';
-import { Button, Table,Tag } from 'antd';
+import {Button, notification, Table, Tag} from 'antd';
 import BuyModal from "../components/Buy.jsx";
-import Loading from "../components/loading.jsx";
 import styled from "styled-components";
 import {shortAddress} from "../utils/global.js";
 import {BI, formatUnit} from "@ckb-lumos/bi";
@@ -10,7 +9,8 @@ import CkbImg from "../assets/ckb.png";
 import {getmarket} from "../api/index.js";
 import {OrderArgs as OrderArqs} from "@nervina-labs/ckb-dex";
 import { v4 as uuidv4 } from 'uuid';
-import {useSelector} from "react-redux";
+import store from "../store/index.js";
+import {saveLoading} from "../store/reducer.js";
 
 
 const Box = styled.div`
@@ -47,32 +47,27 @@ const PageBox = styled.div`
 export default function Home(){
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
-    const [loading, setLoading] = useState(false);
     const [showBuy, setShowBuy] = useState(false);
     const [list,setList] = useState([])
     const [last,setLast] = useState('')
     const [selectItem,setSelectItem]  = useState([]);
+    const [more,setMore] = useState(false)
 
-    const account = useSelector(store => store.account);
-    console.log(account)
 
     const columns = [
         {
             title: 'NFT',
             dataIndex: 'nft',
-            key:"nft",
             render: (_, record) => <img className="nft" src="https://arseed.web3infra.dev/0kNCtP7aiArSYolnBOedfpUEI9HUKrs21BD7rIRGsVw" />
         },
         {
             title: 'Name',
             dataIndex: 'name',
-            key:"name",
             render: (_, record) => <span>Unicorn Box</span>
         },
         {
             title: 'Tx',
             dataIndex: 'tx',
-            key:"tx",
             render: (_, record) => <span>{shortAddress(record?.out_point?.tx_hash)}</span>
         },
         // {
@@ -83,7 +78,6 @@ export default function Home(){
         {
             title: 'Price',
             dataIndex: 'price',
-            key:"price",
             render: (_, record) => <PriceBox> <img src={CkbImg} alt=""/>{formatPrice(record)} <span>CKB</span></PriceBox>
         },
     ];
@@ -93,16 +87,26 @@ export default function Home(){
     }, []);
 
     const getList = async () =>{
-        let rt = await getmarket(10,last);
-        const {objects,last_cursor} = rt;
-        let arr = objects.map(item=> {
-         return {
-             ...item,
-             key:uuidv4()
-         }
-        })
-        setList([...list,...arr])
-        setLast(last_cursor)
+        store.dispatch(saveLoading(true));
+        try{
+            let rt = await getmarket(5,last);
+            const {objects,last_cursor} = rt;
+            let arr = objects.map(item=> {
+                return {
+                    ...item,
+                    key:item?.out_point?.tx_hash
+                }
+            })
+            setMore(arr.length===5)
+            setList([...list,...arr]);
+            setLast(last_cursor)
+        }catch (e) {
+            console.error("==getList=",e)
+
+        }finally {
+            store.dispatch(saveLoading(false));
+        }
+
     }
 
     const formatPrice = (element) =>{
@@ -116,7 +120,9 @@ export default function Home(){
     }
 
     const getMore = () =>{
-        getList()
+        if(more){
+            getList()
+        }
     }
 
     const onSelectChange = (newSelectedRowKeys) => {
@@ -142,23 +148,30 @@ export default function Home(){
     const handleClose = () =>{
         setShowBuy(false);
     }
-    const handleLoading = () =>{
-        setLoading(true)
+    const [api,contextHolder] = notification.useNotification();
+    const openNotificationWithIcon = (type,tips,desc) => {
+        api[type]({
+            message: tips,
+            description:desc,
+            duration: 2000,
+        });
+    };
+
+    const handleResult = (type,tip,desc) =>{
+        openNotificationWithIcon(type,tip,desc)
+        setTimeout(()=>{
+            window.location.reload()
+        },2000)
     }
-    const CloseLoading = () =>{
-        setLoading(false)
-    }
+
 
 
     return <Layout_ckb>
 
         {
-            showBuy && <BuyModal handleClose={handleClose} show={showBuy} selectItem={selectItem} handleLoading={handleLoading} CloseLoading={CloseLoading} />
+            showBuy && <BuyModal handleClose={handleClose} show={showBuy} selectItem={selectItem} handleResult={handleResult} />
         }
-        {
-            loading &&  <Loading />
-        }
-
+        {contextHolder}
         <Box>
             <div
                 style={{
@@ -167,7 +180,7 @@ export default function Home(){
                     gap:10
                 }}
             >
-                <Button type="primary"  onClick={() => setShowBuy(true)}>
+                <Button type="primary"  disabled={!selectItem?.length} onClick={() => setShowBuy(true)}>
                    Buy
                 </Button>
 
@@ -179,10 +192,11 @@ export default function Home(){
           {hasSelected ? `Selected ${selectedRowKeys.length} items` : ''}
         </span>
             </div>
-            <Table rowSelection={rowSelection} columns={columns} dataSource={list} pagination={{
-                position: ["none", "none"],
-            }} />
-            <PageBox onClick={()=>getMore()}>Load more</PageBox>
+            <Table rowSelection={rowSelection} columns={columns} dataSource={list} pagination={false} />
+            {
+                more&&<PageBox onClick={()=>getMore()}>Load more</PageBox>
+            }
+
         </Box>
     </Layout_ckb>
 }
