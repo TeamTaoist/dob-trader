@@ -28,11 +28,11 @@ export default function Test() {
 
     // test cancel multi order tx
     // <<
-    buildCancelTxExample().then(txHash => {
-        console.info(`The maker of Spore asset has been finished with tx hash: ${txHash}`)
-    }).catch(err => {
-        console.error(err);
-    })
+    // buildCancelTxExample().then(txHash => {
+    //     console.info(`The maker of Spore asset has been finished with tx hash: ${txHash}`)
+    // }).catch(err => {
+    //     console.error(err);
+    // })
     // >>
 
     // test get my spores
@@ -63,7 +63,19 @@ export default function Test() {
     // });
     // >>
 
+    // test get transaction all info and status
+    // <<
+    getTransaction('0x56b8f7439e5c26b93140a0ae7ef927c0737c36c8077910ded8eba1a87c6f4000').then(info => {
+        console.log("0x56b8f7439e5c26b93140a0ae7ef927c0737c36c8077910ded8eba1a87c6f4000 TxInfo:", info);
+    });
+    // >>
+
     return <Layout_ckb>Test</Layout_ckb>
+}
+
+async function getTransaction(txHash) {
+    const txInfo = await baseRPC('get_transaction', [txHash]);
+    return txInfo;
 }
 
 async function buildCancelTxExample() {
@@ -242,7 +254,7 @@ async function buildTakerTxExample() {
                 const orderArgs = OrderArgs.fromHex(outputArgs);
                 console.log(orderArgs.totalValue, orderArgs.setup);
 
-                if (orderArgs.totalValue < BigInt(200_0000_0000)) {
+                if (orderArgs.totalValue < BigInt(2000_0000_0000)) {
                     console.log(element);
                     orderOutPoints.push({
                         txHash: element.out_point.tx_hash,
