@@ -17,7 +17,7 @@ import {
   serializeScript,
 } from "@nervosnetwork/ckb-sdk-utils";
 import { parseUnit } from "@ckb-lumos/bi";
-
+import { buildMultiNftsMakerTx } from "../../lib/ckb-dex-sdk/order/maker";
 
 // Testnet
 const CKB_NODE_RPC_URL = "https://testnet.ckb.dev/rpc";
@@ -218,6 +218,59 @@ export const handleList = async (connectData, account, price, selectItem) => {
     assetType: append0x(serializeScript(sporeType)),
     ckbAsset: CKBAsset.SPORE,
   });
+
+  // You can call the `signRawTransaction` method to sign the raw tx with JoyID wallet through @joyid/ckb SDK
+  // please make sure the buyer address is the JoyID wallet ckb address
+  const signedTx = await signRawTransaction(rawTx, seller);
+
+  return collector.getCkb().rpc.sendTransaction(signedTx, "passthrough");
+};
+
+export const handleMultiList = async (
+  connectData,
+  account,
+  price,
+  selectItemList
+) => {
+  const collector = new Collector({
+    ckbNodeUrl: CKB_NODE_RPC_URL,
+    ckbIndexerUrl: CKB_INDEXER_URL,
+  });
+
+  const seller = account;
+
+  const aggregator = new Aggregator(DOB_AGGREGATOR_URL);
+
+  const joyID = {
+    connectData,
+    aggregator,
+  };
+
+  const listPackage = calculateNFTMakerListPackage(seller);
+
+  let nfts = [];
+
+  for (let i = 0; i < selectItemList.length; i++) {
+    const selectItem = selectItemList[i];
+    const totalValue = parseUnit(price, "ckb").add(listPackage);
+
+    const sporeType = {
+      ...getSporeTypeScript(false),
+      args: selectItem.output.type.args,
+    };
+
+    nfts.push({ totalValue, assetType: append0x(serializeScript(sporeType)) });
+  }
+
+  const { rawTx } = await buildMultiNftsMakerTx(
+    {
+      collector,
+      joyID,
+      seller,
+      ckbAsset: CKBAsset.SPORE,
+    },
+    nfts
+  );
 
   // You can call the `signRawTransaction` method to sign the raw tx with JoyID wallet through @joyid/ckb SDK
   // please make sure the buyer address is the JoyID wallet ckb address

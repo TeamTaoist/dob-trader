@@ -1,0 +1,17 @@
+export declare const remove0x: (hex: string) => string;
+export declare const append0x: (hex?: string) => string;
+export declare const u16ToBe: (u16: number) => string;
+export declare const u32ToBe: (u32: string | number) => string;
+export declare const u32ToLe: (u32: string | number) => string;
+export declare const u8ToHex: (u8: number) => string;
+export declare const hexToU8: (hex: string) => number;
+export declare const u64ToLe: (u64: bigint) => string;
+export declare const u64ToBe: (u64: bigint) => string;
+export declare const u128ToLe: (u128: bigint) => string;
+export declare const u128ToBe: (u128: bigint) => string;
+export declare const beToU128: (beHex: string) => bigint;
+export declare const leToU128: (leHex: string) => bigint;
+export declare const leToU32: (leHex: string) => number;
+export declare const utf8ToHex: (text: string) => string;
+export declare const hexToUtf8: (hex: string) => string;
+//# sourceMappingURL=hex.d.ts.map
