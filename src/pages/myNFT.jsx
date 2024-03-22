@@ -9,6 +9,7 @@ import {getSporesByRPC} from "../api/index.js";
 import {v4 as uuidv4} from "uuid";
 import store from "../store/index.js";
 import {saveLoading} from "../store/reducer.js";
+import {PAGE_SIZE} from "../utils/const.js";
 
 const Box = styled.div`
 .nft{
@@ -89,7 +90,7 @@ export default function MyNFT(){
     const getList = async () =>{
         store.dispatch(saveLoading(true));
         try{
-            let rt = await getSporesByRPC(account,5,last);
+            let rt = await getSporesByRPC(account,PAGE_SIZE,last);
             const {objects,last_cursor} = rt;
 
             let arr = objects.map(item=> {
@@ -98,7 +99,7 @@ export default function MyNFT(){
                     key:uuidv4()
                 }
             })
-            setMore(arr.length===5)
+            setMore(arr.length===PAGE_SIZE)
             setList([...list,...arr])
             setLast(last_cursor)
 

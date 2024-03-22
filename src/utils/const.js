@@ -15,3 +15,4 @@ export const DOB_AGGREGATOR_URL = "https://cota.nervina.dev/mainnet-aggregator";
 export const JOYID_APP_URL = "https://app.joy.id";
 export const CONFIG = config.MAINNET;
 export const isMainnet = true;
+export const PAGE_SIZE = 10;

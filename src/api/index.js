@@ -18,7 +18,7 @@ import {
 } from "@nervosnetwork/ckb-sdk-utils";
 import { parseUnit } from "@ckb-lumos/bi";
 
-import { CKB_NODE_RPC_URL, CKB_INDEXER_URL, DOB_AGGREGATOR_URL,  JOYID_APP_URL,CONFIG, isMainnet} from "../utils/const";
+import { CKB_NODE_RPC_URL, CKB_INDEXER_URL, DOB_AGGREGATOR_URL,  JOYID_APP_URL,CONFIG, isMainnet, PAGE_SIZE} from "../utils/const";
 
 
 initConfig({
@@ -52,7 +52,7 @@ async function baseRPC(method, req, url = CKB_NODE_RPC_URL) {
   return data.result;
 }
 
-export async function getSporesByRPC(address, limit = 5, after) {
+export async function getSporesByRPC(address, limit = PAGE_SIZE, after) {
   const lockScript = helpers.parseAddress(address, { config: CONFIG });
 
   const sporeType = getSporeTypeScript(isMainnet);
@@ -91,7 +91,7 @@ export async function getSporesByRPC(address, limit = 5, after) {
   return cells;
 }
 
-export async function getmarket(limit = 5, after) {
+export async function getmarket(limit = PAGE_SIZE, after) {
   const dexLock = getDexLockScript(isMainnet);
   const sporeType = getSporeTypeScript(isMainnet);
   const limitHex = append0x(limit.toString(16));
@@ -222,7 +222,7 @@ export const handleList = async (connectData, account, price, selectItem) => {
   return collector.getCkb().rpc.sendTransaction(signedTx, "passthrough");
 };
 
-export async function getMySporeOrder(address, limit = 5, after) {
+export async function getMySporeOrder(address, limit = PAGE_SIZE, after) {
   const ownerlock = helpers.parseAddress(address, { config: CONFIG });
   const limitHex = append0x(limit.toString(16));
   const dexLock = getDexLockScript(isMainnet);

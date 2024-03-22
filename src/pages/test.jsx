@@ -5,6 +5,7 @@ import Layout_ckb from "../components/layout.jsx";
 import { getDexLockScript, getSporeTypeScript, append0x, calculateNFTMakerListPackage, OrderArgs, buildCancelTx } from "@nervina-labs/ckb-dex";
 import { Client, cacheExchange, fetchExchange, gql } from "urql";
 import { config, helpers } from "@ckb-lumos/lumos";
+import {PAGE_SIZE} from "../utils/const.js";
 
 export default function Test() {
 
@@ -446,7 +447,7 @@ async function getSpores(addresses, first, after) {
     return spores;
 }
 
-async function getSporesByRPC(address, limit = 5, after) {
+async function getSporesByRPC(address, limit = PAGE_SIZE, after) {
     const lockScript = helpers.parseAddress(address, { config: config.TESTNET });
 
     const sporeType = getSporeTypeScript(false); // test network
