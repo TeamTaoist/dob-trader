@@ -18,7 +18,15 @@ import {
 } from "@nervosnetwork/ckb-sdk-utils";
 import { parseUnit } from "@ckb-lumos/bi";
 
-async function baseRPC(method, req, url = "https://testnet.ckb.dev/rpc") {
+
+// Testnet
+const CKB_NODE_RPC_URL = "https://testnet.ckb.dev/rpc";
+const CKB_INDEXER_URL = "https://testnet.ckb.dev/indexer";
+
+const DOB_AGGREGATOR_URL = "https://cota.nervina.dev/aggregator";
+const JOYID_APP_URL = "https://testnet.joyid.dev";
+
+async function baseRPC(method, req, url = CKB_NODE_RPC_URL) {
   const payload = {
     id: 1,
     jsonrpc: "2.0",
@@ -120,13 +128,13 @@ export async function getmarket(limit = 5, after) {
 export async function handleBuildTakerTx(connectData, account, selectArr) {
   // use test net
   const collector = new Collector({
-    ckbNodeUrl: "https://testnet.ckb.dev/rpc",
-    ckbIndexerUrl: "https://testnet.ckb.dev/indexer",
+    ckbNodeUrl: CKB_NODE_RPC_URL,
+    ckbIndexerUrl: CKB_INDEXER_URL,
   });
 
   const buyer = account;
 
-  const aggregator = new Aggregator("https://cota.nervina.dev/aggregator");
+  const aggregator = new Aggregator(DOB_AGGREGATOR_URL);
 
   const joyID = {
     connectData,
@@ -174,13 +182,13 @@ export async function handleBuildTakerTx(connectData, account, selectArr) {
 
 export const handleList = async (connectData, account, price, selectItem) => {
   const collector = new Collector({
-    ckbNodeUrl: "https://testnet.ckb.dev/rpc",
-    ckbIndexerUrl: "https://testnet.ckb.dev/indexer",
+    ckbNodeUrl: CKB_NODE_RPC_URL,
+    ckbIndexerUrl: CKB_INDEXER_URL,
   });
 
   const seller = account;
 
-  const aggregator = new Aggregator("https://cota.nervina.dev/aggregator");
+  const aggregator = new Aggregator(DOB_AGGREGATOR_URL);
 
   const joyID = {
     connectData,
@@ -251,19 +259,19 @@ export async function getMySporeOrder(address, limit = 5, after) {
 export async function handleCancelOrder(connectData, account, selectItem) {
   // use test net
   const collector = new Collector({
-    ckbNodeUrl: "https://testnet.ckb.dev/rpc",
-    ckbIndexerUrl: "https://testnet.ckb.dev/indexer",
+    ckbNodeUrl: CKB_NODE_RPC_URL,
+    ckbIndexerUrl: CKB_INDEXER_URL,
   });
 
   initConfig({
-    name: "JoyID demo",
+    name: "JoyID",
     logo: "https://fav.farm/🆔",
-    joyidAppURL: "https://testnet.joyid.dev",
+    joyidAppURL: JOYID_APP_URL,
   });
 
   const seller = account;
 
-  const aggregator = new Aggregator("https://cota.nervina.dev/aggregator");
+  const aggregator = new Aggregator(DOB_AGGREGATOR_URL);
 
   const joyID = {
     connectData,
