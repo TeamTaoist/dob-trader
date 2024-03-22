@@ -18,18 +18,14 @@ import {
 } from "@nervosnetwork/ckb-sdk-utils";
 import { parseUnit } from "@ckb-lumos/bi";
 
+import { CKB_NODE_RPC_URL, CKB_INDEXER_URL, DOB_AGGREGATOR_URL,  JOYID_APP_URL,CONFIG, isMainnet} from "../utils/const";
 
-// Testnet
-const CKB_NODE_RPC_URL = "https://testnet.ckb.dev/rpc";
-const CKB_INDEXER_URL = "https://testnet.ckb.dev/indexer";
-
-const DOB_AGGREGATOR_URL = "https://cota.nervina.dev/aggregator";
-const JOYID_APP_URL = "https://testnet.joyid.dev";
 
 initConfig({
   name: "JoyID",
   logo: "https://fav.farm/🆔",
   joyidAppURL: JOYID_APP_URL,
+  network: isMainnet ? "mainnet" : "testnet",
 });
 
 async function baseRPC(method, req, url = CKB_NODE_RPC_URL) {
@@ -57,9 +53,9 @@ async function baseRPC(method, req, url = CKB_NODE_RPC_URL) {
 }
 
 export async function getSporesByRPC(address, limit = 5, after) {
-  const lockScript = helpers.parseAddress(address, { config: config.TESTNET });
+  const lockScript = helpers.parseAddress(address, { config: CONFIG });
 
-  const sporeType = getSporeTypeScript(false); // test network
+  const sporeType = getSporeTypeScript(isMainnet);
 
   const limitHex = append0x(limit.toString(16));
 
@@ -96,8 +92,8 @@ export async function getSporesByRPC(address, limit = 5, after) {
 }
 
 export async function getmarket(limit = 5, after) {
-  const dexLock = getDexLockScript(false);
-  const sporeType = getSporeTypeScript(false);
+  const dexLock = getDexLockScript(isMainnet);
+  const sporeType = getSporeTypeScript(isMainnet);
   const limitHex = append0x(limit.toString(16));
   const paramList = [
     {
@@ -132,8 +128,8 @@ export async function getmarket(limit = 5, after) {
 }
 
 export async function handleBuildTakerTx(connectData, account, selectArr) {
-  // use test net
-  const collector = new Collector({
+
+    const collector = new Collector({
     ckbNodeUrl: CKB_NODE_RPC_URL,
     ckbIndexerUrl: CKB_INDEXER_URL,
   });
@@ -179,7 +175,7 @@ export async function handleBuildTakerTx(connectData, account, selectArr) {
   console.log(rawTx);
 
   const signedTx = await signRawTransaction(rawTx, buyer, {
-    config: config.TESTNET,
+    config: CONFIG,
     witnessIndex,
   });
 
@@ -206,7 +202,7 @@ export const handleList = async (connectData, account, price, selectItem) => {
   const totalValue = parseUnit(price, "ckb").add(listPackage);
 
   const sporeType = {
-    ...getSporeTypeScript(false),
+    ...getSporeTypeScript(isMainnet),
     args: selectItem.output.type.args,
   };
   const { rawTx } = await buildMakerTx({
@@ -227,10 +223,10 @@ export const handleList = async (connectData, account, price, selectItem) => {
 };
 
 export async function getMySporeOrder(address, limit = 5, after) {
-  const ownerlock = helpers.parseAddress(address, { config: config.TESTNET });
+  const ownerlock = helpers.parseAddress(address, { config: CONFIG });
   const limitHex = append0x(limit.toString(16));
-  const dexLock = getDexLockScript(false);
-  const sporeType = getSporeTypeScript(false);
+  const dexLock = getDexLockScript(isMainnet);
+  const sporeType = getSporeTypeScript(isMainnet);
 
   const paramList = [
     {
@@ -263,17 +259,10 @@ export async function getMySporeOrder(address, limit = 5, after) {
 }
 
 export async function handleCancelOrder(connectData, account, selectItem) {
-  // use test net
   const collector = new Collector({
     ckbNodeUrl: CKB_NODE_RPC_URL,
     ckbIndexerUrl: CKB_INDEXER_URL,
   });
-
-  // initConfig({
-  //   name: "JoyID",
-  //   logo: "https://fav.farm/🆔",
-  //   joyidAppURL: JOYID_APP_URL,
-  // });
 
   const seller = account;
 
@@ -284,9 +273,9 @@ export async function handleCancelOrder(connectData, account, selectItem) {
     aggregator,
   };
 
-  const dexLock = getDexLockScript(false);
-  const sporeType = getSporeTypeScript(false);
-  const ownerlock = helpers.parseAddress(seller, { config: config.TESTNET });
+  const dexLock = getDexLockScript(isMainnet);
+  const sporeType = getSporeTypeScript(isMainnet);
+  const ownerlock = helpers.parseAddress(seller, { config: CONFIG });
 
   const orderOutPoints = [];
   for (let i = 0; i < selectItem.length; i++) {
@@ -313,7 +302,7 @@ export async function handleCancelOrder(connectData, account, selectItem) {
   console.log(rawTx);
 
   const signedTx = await signRawTransaction(rawTx, seller, {
-    config: config.TESTNET,
+    config: CONFIG,
     witnessIndex,
   });
 
