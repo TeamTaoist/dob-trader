@@ -1,14 +1,15 @@
 import styled from "styled-components";
-import { connect } from '@joyid/ckb';
+import { connect, initConfig } from '@joyid/ckb';
 import store from "../store";
-import {saveAccount, saveConnectData} from "../store/reducer";
-import {useSelector} from "react-redux";
-import {Button} from "antd";
-import {shortAddress} from "../utils/global";
+import { saveAccount, saveConnectData } from "../store/reducer";
+import { useSelector } from "react-redux";
+import { Button } from "antd";
+import { shortAddress } from "../utils/global";
 import {
     CloseCircleOutlined
 } from '@ant-design/icons';
 
+import { CKB_NODE_RPC_URL, CKB_INDEXER_URL, DOB_AGGREGATOR_URL, JOYID_APP_URL, CONFIG, isMainnet } from "../utils/const";
 
 const Box = styled.div`
     display: flex;
@@ -29,12 +30,18 @@ const RhtBox = styled.div`
 `
 
 
-export default function Joyid (){
+export default function Joyid() {
     const account = useSelector(store => store.account);
 
-    const onConnect = async() =>{
+
+    const onConnect = async () => {
         try {
-            const authData = await connect();
+            const authData = await connect({
+                name: "JoyID",
+                logo: "https://fav.farm/🆔",
+                joyidAppURL: JOYID_APP_URL,
+                network: isMainnet ? "mainnet" : "testnet",
+            });
             store.dispatch(saveAccount(authData.address));
             store.dispatch(saveConnectData(authData));
         } catch (error) {
@@ -42,7 +49,7 @@ export default function Joyid (){
         }
     }
 
-    const Disconnect = () =>{
+    const Disconnect = () => {
         store.dispatch(saveAccount(null));
         store.dispatch(saveConnectData(null));
     }
@@ -57,7 +64,7 @@ export default function Joyid (){
             </>
         }
         {
-            !!account  &&  <RhtBox >{shortAddress(account)}<CloseCircleOutlined className="wallet" onClick={()=>Disconnect()} /></RhtBox>
+            !!account && <RhtBox >{shortAddress(account)}<CloseCircleOutlined className="wallet" onClick={() => Disconnect()} /></RhtBox>
         }
 
     </Box>

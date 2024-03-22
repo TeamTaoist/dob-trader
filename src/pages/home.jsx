@@ -11,6 +11,7 @@ import {OrderArgs as OrderArqs} from "@nervina-labs/ckb-dex";
 import { v4 as uuidv4 } from 'uuid';
 import store from "../store/index.js";
 import {saveLoading} from "../store/reducer.js";
+import {PAGE_SIZE} from "../utils/const.js";
 
 
 const Box = styled.div`
@@ -89,7 +90,7 @@ export default function Home(){
     const getList = async () =>{
         store.dispatch(saveLoading(true));
         try{
-            let rt = await getmarket(5,last);
+            let rt = await getmarket(PAGE_SIZE,last);
             const {objects,last_cursor} = rt;
             let arr = objects.map(item=> {
                 return {
@@ -97,7 +98,7 @@ export default function Home(){
                     key:item?.out_point?.tx_hash
                 }
             })
-            setMore(arr.length===5)
+            setMore(arr.length===PAGE_SIZE)
             setList([...list,...arr]);
             setLast(last_cursor)
         }catch (e) {

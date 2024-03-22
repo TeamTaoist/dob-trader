@@ -13,6 +13,7 @@ import {useSelector} from "react-redux";
 import {OrderArgs as OrderArqs} from "@nervina-labs/ckb-dex/lib/order/orderArgs.js";
 import store from "../store/index.js";
 import {saveLoading} from "../store/reducer.js";
+import { PAGE_SIZE } from "../utils/const.js";
 
 const Box = styled.div`
     .nft{
@@ -96,7 +97,7 @@ export default function MyOrders(){
     const getList = async () =>{
         store.dispatch(saveLoading(true));
         try{
-            let rt = await getMySporeOrder(account,10,last);
+            let rt = await getMySporeOrder(account,PAGE_SIZE,last);
             const {objects,last_cursor} = rt;
 
             let arr = objects.map(item=> {
