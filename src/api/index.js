@@ -26,6 +26,12 @@ const CKB_INDEXER_URL = "https://testnet.ckb.dev/indexer";
 const DOB_AGGREGATOR_URL = "https://cota.nervina.dev/aggregator";
 const JOYID_APP_URL = "https://testnet.joyid.dev";
 
+initConfig({
+  name: "JoyID",
+  logo: "https://fav.farm/🆔",
+  joyidAppURL: JOYID_APP_URL,
+});
+
 async function baseRPC(method, req, url = CKB_NODE_RPC_URL) {
   const payload = {
     id: 1,
@@ -263,11 +269,11 @@ export async function handleCancelOrder(connectData, account, selectItem) {
     ckbIndexerUrl: CKB_INDEXER_URL,
   });
 
-  initConfig({
-    name: "JoyID",
-    logo: "https://fav.farm/🆔",
-    joyidAppURL: JOYID_APP_URL,
-  });
+  // initConfig({
+  //   name: "JoyID",
+  //   logo: "https://fav.farm/🆔",
+  //   joyidAppURL: JOYID_APP_URL,
+  // });
 
   const seller = account;
 
