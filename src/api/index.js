@@ -309,7 +309,7 @@ export const handleMultiList = async (
     const totalValue = parseUnit(price, "ckb").add(listPackage);
 
     const sporeType = {
-      ...getSporeTypeScript(false),
+      ...getSporeTypeScript(isMainnet),
       args: selectItem.output.type.args,
     };
 
