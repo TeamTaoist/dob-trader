@@ -11,7 +11,7 @@ import {
   getDexLockScript,
   getSporeTypeScript,
   OrderArgs,
-} from "@nervina-labs/ckb-dex";
+} from "../../lib/ckb-dex-sdk/index";
 import { initConfig, signRawTransaction } from "@joyid/ckb";
 import {
   serializeOutPoint,

@@ -1,8 +1,8 @@
 import { connect, initConfig, signRawTransaction } from "@joyid/ckb";
-import { Aggregator, buildTakerTx, buildMakerTx, CKBAsset, Collector } from "@nervina-labs/ckb-dex";
+import { Aggregator, buildTakerTx, buildMakerTx, CKBAsset, Collector } from "../../lib/ckb-dex-sdk/index.js";
 import { serializeOutPoint, serializeScript } from "@nervosnetwork/ckb-sdk-utils";
 import Layout_ckb from "../components/layout.jsx";
-import { getDexLockScript, getSporeTypeScript, append0x, calculateNFTMakerListPackage, OrderArgs, buildCancelTx } from "@nervina-labs/ckb-dex";
+import { getDexLockScript, getSporeTypeScript, append0x, calculateNFTMakerListPackage, OrderArgs, buildCancelTx } from "../../lib/ckb-dex-sdk/index.js";
 import { Client, cacheExchange, fetchExchange, gql } from "urql";
 import { Indexer, config, helpers, BI } from "@ckb-lumos/lumos";
 import { CKB_INDEXER_URL, CKB_NODE_RPC_URL, PAGE_SIZE, CONFIG, isMainnet } from "../utils/const.js";

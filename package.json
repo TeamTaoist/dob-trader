@@ -16,7 +16,6 @@
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@joyid/ckb": "^0.0.6",
-    "@nervina-labs/ckb-dex": "^0.2.7",
     "@nervosnetwork/ckb-sdk-utils": "^0.109.1",
     "@reduxjs/toolkit": "^2.2.1",
     "antd": "^5.15.3",
@@ -28,7 +27,13 @@
     "redux-persist": "^6.0.0",
     "styled-components": "^6.1.8",
     "urql": "^4.0.6",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "@nervosnetwork/ckb-sdk-core": "^0.109.0",
+    "axios": "^1.6.7",
+    "camelcase-keys": "^7.0.2",
+    "convert-keys": "1.3.4",
+    "bignumber.js": "^9.1.1",
+    "@spore-sdk/core": "0.2.0-beta.3"
   },
   "devDependencies": {
     "@types/react": "^18.2.64",
