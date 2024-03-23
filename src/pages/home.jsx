@@ -1,17 +1,18 @@
 import Layout_ckb from "../components/layout.jsx";
-import React, {useEffect, useState} from 'react';
-import {Button, notification, Table, Tag} from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Button, notification, Table, Tag } from 'antd';
 import BuyModal from "../components/Buy.jsx";
 import styled from "styled-components";
-import {shortAddress} from "../utils/global.js";
-import {BI, formatUnit} from "@ckb-lumos/bi";
+import { shortAddress } from "../utils/global.js";
+import { BI, formatUnit } from "@ckb-lumos/bi";
 import CkbImg from "../assets/ckb.png";
-import {getmarket} from "../api/index.js";
-import {OrderArgs as OrderArqs} from "@nervina-labs/ckb-dex";
+import { getmarket } from "../api/index.js";
+import { OrderArgs as OrderArqs } from "@nervina-labs/ckb-dex";
 import { v4 as uuidv4 } from 'uuid';
 import store from "../store/index.js";
-import {saveLoading} from "../store/reducer.js";
-import {PAGE_SIZE} from "../utils/const.js";
+import { saveLoading } from "../store/reducer.js";
+import { PAGE_SIZE } from "../utils/const.js";
+import { utils } from "@ckb-lumos/lumos";
 
 
 const Box = styled.div`
@@ -45,14 +46,14 @@ const PageBox = styled.div`
 `
 
 
-export default function Home(){
+export default function Home() {
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
     const [showBuy, setShowBuy] = useState(false);
-    const [list,setList] = useState([])
-    const [last,setLast] = useState('')
-    const [selectItem,setSelectItem]  = useState([]);
-    const [more,setMore] = useState(false)
+    const [list, setList] = useState([])
+    const [page, setPage] = useState(0)
+    const [selectItem, setSelectItem] = useState([]);
+    const [more, setMore] = useState(false)
 
 
     const columns = [
@@ -79,7 +80,7 @@ export default function Home(){
         {
             title: 'Price',
             dataIndex: 'price',
-            render: (_, record) => <PriceBox> <img src={CkbImg} alt=""/>{formatPrice(record)} <span>CKB</span></PriceBox>
+            render: (_, record) => <PriceBox> <img src={CkbImg} alt="" />{formatPrice(record)} <span>CKB</span></PriceBox>
         },
     ];
 
@@ -87,50 +88,54 @@ export default function Home(){
         getList()
     }, []);
 
-    const getList = async () =>{
+    const getList = async () => {
         store.dispatch(saveLoading(true));
-        try{
-            let rt = await getmarket(PAGE_SIZE,last);
-            const {objects,last_cursor} = rt;
-            let arr = objects.map(item=> {
+        try {
+            let rt = await getmarket(PAGE_SIZE, page);
+            const { objects } = rt;
+            let arr = objects.map(item => {
                 return {
                     ...item,
-                    key:item?.out_point?.tx_hash
+                    key: item.outPoint.txHash + item.outPoint.index
                 }
             })
-            setMore(arr.length===PAGE_SIZE)
-            setList([...list,...arr]);
-            setLast(last_cursor)
-        }catch (e) {
-            console.error("==getList=",e)
+            setMore(arr.length === PAGE_SIZE)
+            setList([...list, ...arr]);
+            if (objects.length > 0) {
+                setPage(page + 1)
+            } else {
+                setPage(page)
+            }
+        } catch (e) {
+            console.error("==getList=", e)
 
-        }finally {
+        } finally {
             store.dispatch(saveLoading(false));
         }
 
     }
 
-    const formatPrice = (element) =>{
-        let outputArgs = element.output.lock.args;
-        if(outputArgs){
-            const orderAras = OrderArqs. fromHex (outputArgs) ;
-            const {totalValue} = orderAras
+    const formatPrice = (element) => {
+        let outputArgs = element.cellOutput.lock.args;
+        if (outputArgs) {
+            const orderAras = OrderArqs.fromHex(outputArgs);
+            const { totalValue } = orderAras
             let rt = BI.from(totalValue).sub(7000000000)
-            return formatUnit(rt,'ckb')
+            return formatUnit(rt, 'ckb')
         }
     }
 
-    const getMore = () =>{
-        if(more){
+    const getMore = () => {
+        if (more) {
             getList()
         }
     }
 
     const onSelectChange = (newSelectedRowKeys) => {
         let newSeletItem = []
-        list.map((item)=>{
-            newSelectedRowKeys.map((sl) =>{
-                if(item.key === sl){
+        list.map((item) => {
+            newSelectedRowKeys.map((sl) => {
+                if (item.key === sl) {
                     newSeletItem.push(item)
                 }
             })
@@ -146,23 +151,23 @@ export default function Home(){
     };
     const hasSelected = selectedRowKeys.length > 0;
 
-    const handleClose = () =>{
+    const handleClose = () => {
         setShowBuy(false);
     }
-    const [api,contextHolder] = notification.useNotification();
-    const openNotificationWithIcon = (type,tips,desc) => {
+    const [api, contextHolder] = notification.useNotification();
+    const openNotificationWithIcon = (type, tips, desc) => {
         api[type]({
             message: tips,
-            description:desc,
+            description: desc,
             duration: 2000,
         });
     };
 
-    const handleResult = (type,tip,desc) =>{
-        openNotificationWithIcon(type,tip,desc)
-        setTimeout(()=>{
+    const handleResult = (type, tip, desc) => {
+        openNotificationWithIcon(type, tip, desc)
+        setTimeout(() => {
             window.location.reload()
-        },2000)
+        }, 2000)
     }
 
 
@@ -177,12 +182,12 @@ export default function Home(){
             <div
                 style={{
                     marginBottom: 16,
-                    display:"flex",
-                    gap:10
+                    display: "flex",
+                    gap: 10
                 }}
             >
-                <Button type="primary"  disabled={!selectItem?.length} onClick={() => setShowBuy(true)}>
-                   Buy
+                <Button type="primary" disabled={!selectItem?.length} onClick={() => setShowBuy(true)}>
+                    Buy
                 </Button>
 
                 <span
@@ -190,12 +195,12 @@ export default function Home(){
                         marginLeft: 8,
                     }}
                 >
-          {hasSelected ? `Selected ${selectedRowKeys.length} items` : ''}
-        </span>
+                    {hasSelected ? `Selected ${selectedRowKeys.length} items` : ''}
+                </span>
             </div>
             <Table rowSelection={rowSelection} columns={columns} dataSource={list} pagination={false} />
             {
-                more&&<PageBox onClick={()=>getMore()}>Load more</PageBox>
+                more && <PageBox onClick={() => getMore()}>Load more</PageBox>
             }
 
         </Box>

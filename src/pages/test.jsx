@@ -4,8 +4,11 @@ import { serializeOutPoint, serializeScript } from "@nervosnetwork/ckb-sdk-utils
 import Layout_ckb from "../components/layout.jsx";
 import { getDexLockScript, getSporeTypeScript, append0x, calculateNFTMakerListPackage, OrderArgs, buildCancelTx } from "@nervina-labs/ckb-dex";
 import { Client, cacheExchange, fetchExchange, gql } from "urql";
-import { config, helpers } from "@ckb-lumos/lumos";
-import {PAGE_SIZE} from "../utils/const.js";
+import { Indexer, config, helpers, BI } from "@ckb-lumos/lumos";
+import { CKB_INDEXER_URL, CKB_NODE_RPC_URL, PAGE_SIZE, CONFIG, isMainnet } from "../utils/const.js";
+import { formatUnit, parseUnit } from "@ckb-lumos/bi";
+
+const indexer = new Indexer(CKB_INDEXER_URL, CKB_NODE_RPC_URL);
 
 export default function Test() {
 
@@ -66,8 +69,15 @@ export default function Test() {
 
     // test get transaction all info and status
     // <<
-    getTransaction('0x56b8f7439e5c26b93140a0ae7ef927c0737c36c8077910ded8eba1a87c6f4000').then(info => {
-        console.log("0x56b8f7439e5c26b93140a0ae7ef927c0737c36c8077910ded8eba1a87c6f4000 TxInfo:", info);
+    // getTransaction('0x56b8f7439e5c26b93140a0ae7ef927c0737c36c8077910ded8eba1a87c6f4000').then(info => {
+    //     console.log("0x56b8f7439e5c26b93140a0ae7ef927c0737c36c8077910ded8eba1a87c6f4000 TxInfo:", info);
+    // });
+    // >>
+
+    // test lumos get dex order
+    // <<
+    getDexOrderByLumos().then(() => {
+        console.log("finish");
     });
     // >>
 
@@ -384,8 +394,6 @@ async function baseRPC(
 
 
 async function getSpores(addresses, first, after) {
-
-
     const query_getNFTs = gql`
         query getNFTs(
             $filter: SporeFilterInput
@@ -482,4 +490,65 @@ async function getSporesByRPC(address, limit = PAGE_SIZE, after) {
     const cells = await baseRPC('get_cells', paramList);
 
     return cells;
+}
+
+async function getDexOrderByLumos() {
+    config.initializeConfig(CONFIG);
+
+    const dexLock = getDexLockScript(isMainnet);
+    const sporeType = getSporeTypeScript(isMainnet);
+
+    // const lockScript = helpers.parseAddress("ckt1qrfrwcdnvssswdwpn3s9v8fp87emat306ctjwsm3nmlkjg8qyza2cqgqqyse9w5xpgupt7q6sru8dcq9q8k4lktsegcsxjqm");
+
+    // let collector = indexer.collector({
+    //     lock: {
+    //         script: {
+    //             ...lockScript
+    //         },
+    //         searchMode: 'exact'
+    //     },
+    //     type: "empty"
+    // });
+
+    // console.log('start');
+    // let len = 0;
+    // let listCells = [];
+    // let ckb = BI.from(0);
+    // for await (const cell of collector.collect()) {
+    //     console.log(cell);
+    //     len++;
+
+    //     // const orderArgs = OrderArgs.fromHex(cell.cellOutput.lock.args);
+    //     // console.log(orderArgs.totalValue, orderArgs.setup);
+
+    //     listCells.push(cell);
+    //     ckb = ckb.add(cell.cellOutput.capacity);
+    // }
+
+    // ckb = ckb.add(parseUnit("12311.99993558", 'ckb'));
+
+    // console.log(formatUnit(ckb, "ckb"), "CKB");
+    // console.log(len);
+    // return listCells;
+
+    // const lockScript = helpers.parseAddress(address, { config: config.TESTNET });
+
+    // const paramList = [
+    //     {
+    //         script: {
+    //             code_hash: "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+    //             hash_type: "type",
+    //             args: "0xa897829e60ee4e3fb0e4abe65549ec4a5ddafad7",
+    //         },
+    //         script_type: 'lock',
+    //         script_search_mode: "exact",
+    //     }, 'asc', "0x3E8"
+    // ];
+
+    // const cells = await baseRPC('get_cells', paramList);
+
+    // console.log(cells.length);
+    // console.log(cells);
+
+    // return cells;
 }

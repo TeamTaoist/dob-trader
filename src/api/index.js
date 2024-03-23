@@ -1,4 +1,4 @@
-import { config, helpers } from "@ckb-lumos/lumos";
+import { Indexer, helpers, utils } from "@ckb-lumos/lumos";
 import {
   Aggregator,
   append0x,
@@ -10,6 +10,7 @@ import {
   Collector,
   getDexLockScript,
   getSporeTypeScript,
+  OrderArgs,
 } from "@nervina-labs/ckb-dex";
 import { initConfig, signRawTransaction } from "@joyid/ckb";
 import {
@@ -99,40 +100,90 @@ export async function getSporesByRPC(address, limit = PAGE_SIZE, after) {
   return cells;
 }
 
-export async function getmarket(limit = PAGE_SIZE, after) {
+export async function getmarket(limit = PAGE_SIZE, page = 0) {
   const dexLock = getDexLockScript(isMainnet);
   const sporeType = getSporeTypeScript(isMainnet);
-  const limitHex = append0x(limit.toString(16));
-  const paramList = [
-    {
+  // const limitHex = append0x(limit.toString(16));
+  // const paramList = [
+  //   {
+  //     script: {
+  //       code_hash: dexLock.codeHash,
+  //       hash_type: dexLock.hashType,
+  //       args: "0x",
+  //     },
+  //     script_type: "lock",
+  //     script_search_mode: "prefix",
+  //     filter: {
+  //       script: {
+  //         code_hash: sporeType.codeHash,
+  //         hash_type: sporeType.hashType,
+  //         args: "0x",
+  //       },
+  //       script_search_mode: "prefix",
+  //       script_type: "type",
+  //     },
+  //   },
+  //   "asc",
+  //   limitHex,
+  // ];
+
+  // if (after) {
+  //   paramList.push(after);
+  // }
+
+  // const cells = await baseRPC("get_cells", paramList);
+
+  let cells = [];
+
+  let indexer = new Indexer(CKB_INDEXER_URL, CKB_NODE_RPC_URL);
+  let collector = indexer.collector({
+    lock: {
       script: {
-        code_hash: dexLock.codeHash,
-        hash_type: dexLock.hashType,
+        codeHash: dexLock.codeHash,
+        hashType: dexLock.hashType,
         args: "0x",
       },
-      script_type: "lock",
-      script_search_mode: "prefix",
-      filter: {
-        script: {
-          code_hash: sporeType.codeHash,
-          hash_type: sporeType.hashType,
-          args: "0x",
-        },
-        script_search_mode: "prefix",
-        script_type: "type",
-      },
+      searchMode: "prefix",
     },
-    "asc",
-    limitHex,
-  ];
+    type: {
+      script: {
+        codeHash: sporeType.codeHash,
+        hashType: sporeType.hashType,
+        args: "0x",
+      },
+      searchMode: "prefix",
+    },
+  });
 
-  if (after) {
-    paramList.push(after);
+  for await (const cell of collector.collect()) {
+    cells.push(cell);
   }
 
-  const cells = await baseRPC("get_cells", paramList);
+  cells.sort((a, b) => {
+    const a_orderArgs = OrderArgs.fromHex(a.cellOutput.lock.args);
+    const b_orderArgs = OrderArgs.fromHex(b.cellOutput.lock.args);
 
-  return cells;
+    if (a_orderArgs.totalValue > b_orderArgs.totalValue) {
+      return 1;
+    } else if (a_orderArgs.totalValue < b_orderArgs.totalValue) {
+      return -1;
+    } else {
+      return 0;
+    }
+  });
+
+  let objects = [];
+  if (page > 0) {
+    if (limit * page < cells.length) {
+      const subArray = cells.slice(limit * page, limit * (page + 1));
+      objects.push(...subArray);
+    }
+  } else {
+    const subArray = cells.slice(0, limit);
+    objects.push(...subArray);
+  }
+
+  return { objects: cells };
 }
 
 export async function handleBuildTakerTx(connectData, account, selectArr) {
@@ -165,8 +216,8 @@ export async function handleBuildTakerTx(connectData, account, selectArr) {
     const element = selectArr[i];
     console.log("====handleBuildTakerTx", element);
     orderOutPoints.push({
-      txHash: element.out_point.tx_hash,
-      index: element.out_point.index,
+      txHash: element.outPoint.txHash,
+      index: element.outPoint.index,
     });
   }
 
