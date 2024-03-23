@@ -1,1 +1,0 @@
-{"version":3,"file":"taker.d.ts","sourceRoot":"","sources":["../../src/order/taker.ts"],"names":[],"mappings":";AAEA,OAAO,EAAkC,WAAW,EAAE,WAAW,EAAE,MAAM,UAAU,CAAA;AAiBnF,eAAO,MAAM,iBAAiB,eAAgB,cAAc,QAAQ,EAAE;;;;CAiBrE,CAAA;AAED,eAAO,MAAM,kBAAkB,eAAgB,cAAc,QAAQ,EAAE,aAAa,cAAc,MAAM;;;;;CAgCvG,CAAA;AAED,eAAO,MAAM,YAAY,gEAOtB,WAAW,KAAG,QAAQ,WAAW,CA6JnC,CAAA"}

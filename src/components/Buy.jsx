@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { handleBuildTakerTx } from "../api/index.js";
 import { useSelector } from "react-redux";
-import { OrderArgs as OrderArqs } from "../../lib/ckb-dex-sdk/index.js";
+import { OrderArgs as OrderArqs } from "@nervina-labs/ckb-dex";
 import { BI, formatUnit } from "@ckb-lumos/bi";
 import store from "../store/index.js";
 import { saveLoading } from "../store/reducer.js";

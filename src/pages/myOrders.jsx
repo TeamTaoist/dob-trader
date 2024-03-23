@@ -10,7 +10,7 @@ import CkbImg from "../assets/ckb.png";
 import { getMySporeOrder, getSporesByRPC } from "../api/index.js";
 import { v4 as uuidv4 } from "uuid";
 import { useSelector } from "react-redux";
-import { OrderArgs as OrderArqs } from "../../lib/ckb-dex-sdk/index.js";
+import { OrderArgs as OrderArqs } from "@nervina-labs/ckb-dex";
 import store from "../store/index.js";
 import { saveLoading } from "../store/reducer.js";
 import { PAGE_SIZE } from "../utils/const.js";

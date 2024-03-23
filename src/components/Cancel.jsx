@@ -2,7 +2,7 @@ import { Modal, Flex, Input } from "antd";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { BI, formatUnit } from "@ckb-lumos/bi";
-import { OrderArgs as OrderArqs } from "../../lib/ckb-dex-sdk/index.js";
+import { OrderArgs as OrderArqs } from "@nervina-labs/ckb-dex";
 import { handleCancelOrder, handleList } from "../api/index.js";
 import { useSelector } from "react-redux";
 import store from "../store/index.js";

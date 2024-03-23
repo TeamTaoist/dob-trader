@@ -11,14 +11,14 @@ import {
   getDexLockScript,
   getSporeTypeScript,
   OrderArgs,
-} from "../../lib/ckb-dex-sdk/index";
+} from "@nervina-labs/ckb-dex";
 import { initConfig, signRawTransaction } from "@joyid/ckb";
 import {
   serializeOutPoint,
   serializeScript,
 } from "@nervosnetwork/ckb-sdk-utils";
 import { parseUnit } from "@ckb-lumos/bi";
-import { buildMultiNftsMakerTx } from "../../lib/ckb-dex-sdk/order/maker";
+import { buildMultiNftsMakerTx } from "@nervina-labs/ckb-dex";
 
 import {
   CKB_NODE_RPC_URL,

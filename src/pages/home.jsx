@@ -7,7 +7,7 @@ import { shortAddress } from "../utils/global.js";
 import { BI, formatUnit } from "@ckb-lumos/bi";
 import CkbImg from "../assets/ckb.png";
 import { getmarket } from "../api/index.js";
-import { OrderArgs as OrderArqs } from "../../lib/ckb-dex-sdk/index.js";
+import { OrderArgs as OrderArqs } from "@nervina-labs/ckb-dex";
 import { v4 as uuidv4 } from 'uuid';
 import store from "../store/index.js";
 import { saveLoading } from "../store/reducer.js";
